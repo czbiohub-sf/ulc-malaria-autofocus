@@ -24,7 +24,6 @@ from torchvision.transforms import (
 from model import AutoFocus
 
 import matplotlib.pyplot as plt
-import time
 
 
 EPOCHS = 10
@@ -89,7 +88,7 @@ def train(dev):
             optimizer.step()
             running_loss += loss.item()
             print(f"{epoch, i} loss: {loss}")
-            wandb.log({"test_loss": loss})
+            wandb.log({"train_loss": loss})
 
             if i % 100 == 0:
                 val_loss = 0.0
@@ -105,7 +104,7 @@ def train(dev):
 
                 wandb.log(
                     {
-                        "avg_test_loss": running_loss / len(train_dataloader),
+                        "avg_train_loss": running_loss / len(train_dataloader),
                         "avg_val_loss": val_loss / len(validation_dataloader),
                     }
                 )
@@ -114,10 +113,10 @@ def train(dev):
                         "epoch": epoch,
                         "model_state_dict": net.state_dict(),
                         "optimizer_state_dict": optimizer.state_dict(),
-                        "avg_test_loss": running_loss / len(train_dataloader),
+                        "avg_train_loss": running_loss / len(train_dataloader),
                         "avg_val_loss": val_loss / len(validation_dataloader),
                     },
-                    f"trained_models/{wandb.run.name}_{time.time()}.pth",
+                    f"trained_models/{wandb.run.name}_{i}.pth",
                 )
                 running_loss = 0.
 
@@ -132,7 +131,8 @@ def train(dev):
             loss = L2(outputs, labels.float())
             test_loss += loss.item()
 
-    print(f"Final test loss: {test_loss / len(test_dataloader)}")
+    wandb.log({"test loss": test_loss})
+    print(f"final average test loss: {test_loss / len(test_dataloader)}")
 
 
 if __name__ == "__main__":
