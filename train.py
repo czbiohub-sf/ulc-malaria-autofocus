@@ -1,8 +1,7 @@
 #! /usr/bin/env python3
 
 import wandb
-
-wandb.init("autofocus")
+from tqdm import tqdm
 
 import torch
 
@@ -28,7 +27,7 @@ import matplotlib.pyplot as plt
 import time
 
 
-EPOCHS = 20
+EPOCHS = 10
 BATCH_SIZE = 32
 device = torch.device("mps")
 
@@ -42,7 +41,7 @@ full_dataset = datasets.ImageFolder(
 )
 
 test_size = int(0.2 * len(full_dataset))
-validation_size = int(0.1 * len(full_dataset))
+validation_size = int(0.05 * len(full_dataset))
 train_size = len(full_dataset) - test_size - validation_size
 
 testing_dataset, validation_dataset, training_dataset = random_split(
@@ -56,13 +55,16 @@ validation_dataloader = DataLoader(
 train_dataloader = DataLoader(training_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 
-wandb.config = {
-    "learning_rate": 3e-4,
-    "epochs": EPOCHS,
-    "batch_size": BATCH_SIZE,
-    "training_set_size": train_size,
-    "device": str(device),
-}
+wandb.init(
+    "autofocus",
+    config={
+        "learning_rate": 3e-4,
+        "epochs": EPOCHS,
+        "batch_size": BATCH_SIZE,
+        "training_set_size": train_size,
+        "device": str(device),
+    },
+)
 
 
 def train(dev):
@@ -73,7 +75,7 @@ def train(dev):
 
     for epoch in range(EPOCHS):
         running_loss = 0.0
-        for data in train_dataloader:
+        for i, data in enumerate(train_dataloader, 0):
             imgs, labels = data
             imgs = imgs.to(dev)
             labels = labels.to(dev)
@@ -86,36 +88,38 @@ def train(dev):
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-            print(f"({epoch}) loss: {loss}")
+            print(f"{epoch, i} loss: {loss}")
             wandb.log({"test_loss": loss})
 
-        val_loss = 0.0
-        for data in validation_dataloader:
-            imgs, labels = data
-            imgs = imgs.to(dev)
-            labels = labels.to(dev)
+            if i % 100 == 0:
+                val_loss = 0.0
+                for data in tqdm(validation_dataloader):
+                    imgs, labels = data
+                    imgs = imgs.to(dev)
+                    labels = labels.to(dev)
 
-            with torch.no_grad():
-                outputs = net(imgs).reshape(-1)
-                loss = L2(outputs, labels.float())
-                val_loss += loss.item()
+                    with torch.no_grad():
+                        outputs = net(imgs).reshape(-1)
+                        loss = L2(outputs, labels.float())
+                        val_loss += loss.item()
 
-        wandb.log(
-            {
-                "avg_test_loss": running_loss / len(train_dataloader),
-                "avg_val_loss": val_loss / len(validation_dataloader),
-            }
-        )
-        torch.save(
-            {
-                "epoch": epoch,
-                "model_state_dict": net.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "avg_test_loss": running_loss / len(train_dataloader),
-                "avg_val_loss": val_loss / len(validation_dataloader),
-            },
-            "trained_models/model_{time.time()}.pth",
-        )
+                wandb.log(
+                    {
+                        "avg_test_loss": running_loss / len(train_dataloader),
+                        "avg_val_loss": val_loss / len(validation_dataloader),
+                    }
+                )
+                torch.save(
+                    {
+                        "epoch": epoch,
+                        "model_state_dict": net.state_dict(),
+                        "optimizer_state_dict": optimizer.state_dict(),
+                        "avg_test_loss": running_loss / len(train_dataloader),
+                        "avg_val_loss": val_loss / len(validation_dataloader),
+                    },
+                    f"trained_models/{wandb.run.name}_{time.time()}.pth",
+                )
+                running_loss = 0.
 
     test_loss = 0.0
     for data in test_dataloader:
