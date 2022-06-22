@@ -14,13 +14,14 @@ class AutoFocus(nn.Module):
             nn.Conv2d(32, 32, 11, padding="same"),
             nn.LeakyReLU(),
             nn.MaxPool2d(5),
-            nn.Flatten(start_dim=0),
+            nn.Flatten(start_dim=1),
         )
         self.fc_block = nn.Sequential(
             nn.Linear(1536, 1024), nn.LeakyReLU(), nn.Dropout(0.5), nn.Linear(1024, 1)
         )
 
     def forward(self, x: torch.Tensor):
+        x = x.float()
         x = self.conv_block_1(x)
         x = self.conv_block_2(x)
         x = self.fc_block(x)
