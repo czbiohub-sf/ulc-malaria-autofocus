@@ -23,6 +23,7 @@ from torchvision.transforms import (
 
 from model import AutoFocus
 
+from copy import deepcopy
 import matplotlib.pyplot as plt
 
 
@@ -111,8 +112,8 @@ def train(dev):
                 torch.save(
                     {
                         "epoch": epoch,
-                        "model_state_dict": net.state_dict(),
-                        "optimizer_state_dict": optimizer.state_dict(),
+                        "model_state_dict": deepcopy(net.state_dict()),
+                        "optimizer_state_dict": deepcopy(optimizer.state_dict()),
                         "avg_train_loss": running_loss / len(train_dataloader),
                         "avg_val_loss": val_loss / len(validation_dataloader),
                     },
