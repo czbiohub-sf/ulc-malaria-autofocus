@@ -34,8 +34,13 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     def sample_from_class(self, clss, count):
         # TODO: probably a better way to do this
         sample_set = self.class_to_samples[clss]
-        idxs = torch.randint(len(sample_set), [count])
-        return torch.cat([self.transform(self.loader(sample_set[idx])) for idx in idxs])
+        idxs = torch.randint(len(sample_set), [count, 1])
+        samples = []
+        for idx in idxs:
+            T = self.transform(self.loader(sample_set[idx]))
+            T = torch.unsqueeze(T, 0)
+            samples.append(T)
+        return torch.cat(samples)
 
 
 def get_dataset(root_dir: str, batch_size: int, split_percentages: List[float] = [1]):
