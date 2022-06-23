@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 import wandb
-from tqdm import tqdm
 
 import torch
 
@@ -22,16 +21,13 @@ from torchvision.transforms import (
 )
 
 from model import AutoFocus
-
 from copy import deepcopy
-import matplotlib.pyplot as plt
 
 
 EPOCHS = 10
-BATCH_SIZE = 32
-device = torch.device("mps")
+BATCH_SIZE = 64
 
-DATA_DIRS = "/Volumes/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
+DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
 
 transforms = Compose(
     [Resize([150, 200]), RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)]
@@ -93,7 +89,7 @@ def train(dev):
 
             if i % 100 == 0:
                 val_loss = 0.0
-                for data in tqdm(validation_dataloader):
+                for data in validation_dataloader:
                     imgs, labels = data
                     imgs = imgs.to(dev)
                     labels = labels.to(dev)
@@ -137,4 +133,6 @@ def train(dev):
 
 
 if __name__ == "__main__":
+    device = torch.device("cuda")
+    print(f"using device {device}")
     train(device)
