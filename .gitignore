@@ -1,5 +1,9 @@
 
-env
 .python-version
+
+env
+__pycache__
+
+*.out
 wandb
 training_data
