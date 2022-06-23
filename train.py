@@ -62,6 +62,7 @@ def train(dev):
             loss = L2(outputs, labels.float())
             loss.backward()
             optimizer.step()
+
             wandb.log({"train_loss": loss})
 
             if i % 100 == 0:
@@ -102,8 +103,17 @@ def train(dev):
             loss = L2(outputs, labels.float())
             test_loss += loss.item()
 
-    wandb.log({"test loss": test_loss})
+    wandb.log({"average test loss": test_loss / len(test_dataloader)})
     print(f"final average test loss: {test_loss / len(test_dataloader)}")
+    torch.save(
+        {
+            "epoch": epoch,
+            "model_state_dict": deepcopy(net.state_dict()),
+            "optimizer_state_dict": deepcopy(optimizer.state_dict()),
+            "average_test_loss": test_loss / len(test_dataloader),
+        },
+        f"trained_models/{wandb.run.name}_{epoch}_{i}.pth",
+    )
 
 
 if __name__ == "__main__":

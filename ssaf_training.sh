@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --partition=gpu
-#SBATCH --gpus=1
+#SBATCH --gpus-per-node=a100:1
 
 echo
 echo "Single-Shot Auto Focus (SSAF) Training"
