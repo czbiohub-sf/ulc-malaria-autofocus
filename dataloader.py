@@ -1,3 +1,4 @@
+import torch
 from torchvision import datasets
 from torchvision.io import read_image
 from torch.utils.data import DataLoader, random_split
@@ -15,7 +16,26 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
-        self.target_transform = lambda idx: int(self.idx_to_class[idx])
+
+        def idx_to_class(idx):
+            return int(self.idx_to_class[idx])
+
+        self.target_transform = idx_to_class
+
+        # for `sample_from_class`
+        self.class_to_samples = dict()
+        for el, label in self.imgs:
+            el_class = idx_to_class(label)
+            if el_class in self.class_to_samples:
+                self.class_to_samples[el_class].append(el)
+            else:
+                self.class_to_samples[el_class] = [el]
+
+    def sample_from_class(self, clss, count):
+        # TODO: probably a better way to do this
+        sample_set = self.class_to_samples[clss]
+        idxs = torch.randint(len(sample_set), [count])
+        return torch.cat([self.transform(self.loader(sample_set[idx])) for idx in idxs])
 
 
 def get_dataset(root_dir: str, batch_size: int, split_percentages: List[float] = [1]):
@@ -26,7 +46,7 @@ def get_dataset(root_dir: str, batch_size: int, split_percentages: List[float] =
     transforms = Compose(
         [Resize([150, 200]), RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)]
     )
-    full_dataset = datasets.ImageFolder(
+    full_dataset = ImageFolderWithLabels(
         root=root_dir, transform=transforms, loader=read_image
     )
 
@@ -40,7 +60,7 @@ def get_dataset(root_dir: str, batch_size: int, split_percentages: List[float] =
         full_dataset
     ), f"could not create valid dataset split sizes: {split_sizes}, full dataset size is {len(full_dataset)}"
 
-    split_datasets = random_split(full_dataset, split_sizes)
+    return random_split(full_dataset, split_sizes)
 
 
 def get_dataloader(
