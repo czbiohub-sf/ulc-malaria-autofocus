@@ -2,6 +2,9 @@
 
 import wandb
 
+import os
+os.environ["WANDB_MODE"] = "offline"
+
 import torch
 
 torch.manual_seed(0)
@@ -26,13 +29,23 @@ from copy import deepcopy
 
 EPOCHS = 10
 BATCH_SIZE = 64
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
 
 transforms = Compose(
     [Resize([150, 200]), RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)]
 )
-full_dataset = datasets.ImageFolder(
+
+
+class ImageFolderWithLabels(datasets.ImageFolder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
+        self.target_transform = lambda idx: int(self.idx_to_class[idx])
+
+
+full_dataset = ImageFolderWithLabels(
     root=DATA_DIRS, transform=transforms, loader=read_image
 )
 
@@ -67,7 +80,6 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = Adam(net.parameters(), lr=3e-4)
-    losses = []
 
     for epoch in range(EPOCHS):
         running_loss = 0.0
@@ -80,7 +92,6 @@ def train(dev):
 
             outputs = net(imgs).reshape(-1)
             loss = L2(outputs, labels.float())
-
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
@@ -113,7 +124,7 @@ def train(dev):
                         "avg_train_loss": running_loss / len(train_dataloader),
                         "avg_val_loss": val_loss / len(validation_dataloader),
                     },
-                    f"trained_models/{wandb.run.name}_{i}.pth",
+                    f"trained_models/{wandb.run.name}_{epoch}_{i}.pth",
                 )
                 running_loss = 0.
 
@@ -133,6 +144,5 @@ def train(dev):
 
 
 if __name__ == "__main__":
-    device = torch.device("cuda")
     print(f"using device {device}")
     train(device)
