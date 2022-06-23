@@ -26,9 +26,9 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         self.target_transform = lambda idx: int(self.idx_to_class[idx])
 
 
-EPOCHS = 10
+EPOCHS = 16
 ADAM_LR = 3e-4
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
@@ -84,7 +84,7 @@ def train(dev):
             loss.backward()
             optimizer.step()
 
-            wandb.log({"train_loss": loss})
+            wandb.log({"train_loss": loss, "epoch": epoch})
 
             if i % 100 == 0:
                 val_loss = 0.0
