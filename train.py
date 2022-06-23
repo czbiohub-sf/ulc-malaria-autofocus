@@ -16,15 +16,9 @@ from torchvision.transforms import (
 
 import wandb
 from model import AutoFocus
+from dataloader import get_dataloader
+
 from copy import deepcopy
-
-
-class ImageFolderWithLabels(datasets.ImageFolder):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
-        self.target_transform = lambda idx: int(self.idx_to_class[idx])
-
 
 EPOCHS = 16
 ADAM_LR = 3e-4
@@ -33,25 +27,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
 
-transforms = Compose(
-    [Resize([150, 200]), RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)]
+
+test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
+    DATA_DIRS, BATCH_SIZE, [0.2, 0.05, 0.75]
 )
-
-full_dataset = ImageFolderWithLabels(
-    root=DATA_DIRS, transform=transforms, loader=read_image
-)
-
-test_size = int(0.2 * len(full_dataset))
-validation_size = int(0.05 * len(full_dataset))
-train_size = len(full_dataset) - test_size - validation_size
-
-testing_dataset, validate_dataset, training_dataset = random_split(
-    full_dataset, [test_size, validation_size, train_size]
-)
-
-test_dataloader = DataLoader(testing_dataset, batch_size=BATCH_SIZE, shuffle=True)
-validate_dataloader = DataLoader(validate_dataset, batch_size=BATCH_SIZE, shuffle=True)
-train_dataloader = DataLoader(training_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 
 wandb.init(
@@ -60,7 +39,7 @@ wandb.init(
         "learning_rate": ADAM_LR,
         "epochs": EPOCHS,
         "batch_size": BATCH_SIZE,
-        "training_set_size": train_size,
+        "training_set_size": len(train_dataloader),
         "device": str(device),
     },
 )
