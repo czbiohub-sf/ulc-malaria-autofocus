@@ -27,6 +27,7 @@ class ImageFolderWithLabels(datasets.ImageFolder):
 
 
 EPOCHS = 10
+ADAM_LR = 3e-4
 BATCH_SIZE = 64
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -44,21 +45,19 @@ test_size = int(0.2 * len(full_dataset))
 validation_size = int(0.05 * len(full_dataset))
 train_size = len(full_dataset) - test_size - validation_size
 
-testing_dataset, validation_dataset, training_dataset = random_split(
+testing_dataset, validate_dataset, training_dataset = random_split(
     full_dataset, [test_size, validation_size, train_size]
 )
 
 test_dataloader = DataLoader(testing_dataset, batch_size=BATCH_SIZE, shuffle=True)
-validation_dataloader = DataLoader(
-    validation_dataset, batch_size=BATCH_SIZE, shuffle=True
-)
+validate_dataloader = DataLoader(validate_dataset, batch_size=BATCH_SIZE, shuffle=True)
 train_dataloader = DataLoader(training_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 
 wandb.init(
     "autofocus",
     config={
-        "learning_rate": 3e-4,
+        "learning_rate": ADAM_LR,
         "epochs": EPOCHS,
         "batch_size": BATCH_SIZE,
         "training_set_size": train_size,
@@ -70,7 +69,7 @@ wandb.init(
 def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
-    optimizer = Adam(net.parameters(), lr=3e-4)
+    optimizer = Adam(net.parameters(), lr=ADAM_LR)
 
     for epoch in range(EPOCHS):
         for i, data in enumerate(train_dataloader, 0):
@@ -88,7 +87,7 @@ def train(dev):
 
             if i % 100 == 0:
                 val_loss = 0.0
-                for data in validation_dataloader:
+                for data in validate_dataloader:
                     imgs, labels = data
                     imgs = imgs.to(dev)
                     labels = labels.to(dev)
@@ -100,7 +99,7 @@ def train(dev):
 
                 wandb.log(
                     {
-                        "avg_val_loss": val_loss / len(validation_dataloader),
+                        "avg_val_loss": val_loss / len(validate_dataloader),
                     }
                 )
                 torch.save(
@@ -108,7 +107,7 @@ def train(dev):
                         "epoch": epoch,
                         "model_state_dict": deepcopy(net.state_dict()),
                         "optimizer_state_dict": deepcopy(optimizer.state_dict()),
-                        "avg_val_loss": val_loss / len(validation_dataloader),
+                        "avg_val_loss": val_loss / len(validate_dataloader),
                     },
                     f"trained_models/{wandb.run.name}_{epoch}_{i}.pth",
                 )
