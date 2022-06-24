@@ -18,25 +18,20 @@ from torchvision.transforms import (
 from model import AutoFocus
 from dataloader import get_dataset
 
-from tqdm import tqdm
-import matplotlib.pyplot as plt
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
 
 
-device = torch.device("mps")
-
-DATA_DIRS = "training_data"
-
-
-def get_confusion_data(net, data_dir, sample_size=100):
-    [full_dataset_subset] = get_dataset(data_dir, sample_size)
-    full_dataset = full_dataset_subset.dataset
-
+def get_confusion_data(net, dataset, sample_size=100, device=torch.device("cpu")):
     outputs = []
-    classes_in_order = sorted([int(c) for c in full_dataset.classes])
-    for clss in tqdm(classes_in_order):
-        samples = full_dataset.sample_from_class(int(clss), sample_size)
-        out = net(samples).mean()
-        outputs.append(out.item())
+    classes_in_order = sorted([int(c) for c in dataset.classes])
+    for clss in classes_in_order:
+        samples = dataset.sample_from_class(int(clss), sample_size).to(device)
+        with torch.no_grad():
+            out = net(samples).mean().item()
+        outputs.append(out)
 
     return classes_in_order, outputs
 
@@ -52,7 +47,9 @@ if __name__ == "__main__":
     net.train(False)
     net.load_state_dict(model_save["model_state_dict"])
 
-    classes_in_order, outputs = get_confusion_data(net, DATA_DIRS, sample_size=10)
+    [full_dataset_subset] = get_dataset(data_dir, sample_size)
+    full_dataset = full_dataset_subset.dataset
+    classes_in_order, outputs = get_confusion_data(net, full_dataset, sample_size=10)
     plt.plot(classes_in_order, classes_in_order)
     plt.plot(classes_in_order, outputs)
     plt.show()

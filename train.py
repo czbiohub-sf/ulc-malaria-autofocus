@@ -17,21 +17,25 @@ from torchvision.transforms import (
 import wandb
 from model import AutoFocus
 from dataloader import get_dataloader
+from visualize_trained import get_confusion_data
 
 from copy import deepcopy
 
-EPOCHS = 16
+
+EPOCHS = 32
 ADAM_LR = 3e-4
 BATCH_SIZE = 128
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
 
-
+exclude_classes = list(range(-34, -20)) + list(range(21, 47))
 test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
-    DATA_DIRS, BATCH_SIZE, [0.2, 0.05, 0.75]
+    DATA_DIRS,
+    BATCH_SIZE,
+    [0.2, 0.05, 0.75],
+    exclude_classes=exclude_classes,
 )
-
 
 wandb.init(
     "autofocus",
@@ -41,6 +45,8 @@ wandb.init(
         "batch_size": BATCH_SIZE,
         "training_set_size": len(train_dataloader),
         "device": str(device),
+        "exclude_classes": exclude_classes,
+        "classes": train_dataloader.dataset.dataset.classes,
     },
 )
 
@@ -65,7 +71,7 @@ def train(dev):
 
             wandb.log({"train_loss": loss, "epoch": epoch})
 
-            if i % 100 == 0:
+            if i % 50 == 0:
                 val_loss = 0.0
                 for data in validate_dataloader:
                     imgs, labels = data
@@ -77,9 +83,16 @@ def train(dev):
                         loss = L2(outputs, labels.float())
                         val_loss += loss.item()
 
+                _, confusion_outputs = get_confusion_data(
+                    net,
+                    validate_dataloader.dataset.dataset,
+                    sample_size=BATCH_SIZE,
+                    device=device,
+                )
                 wandb.log(
                     {
                         "avg_val_loss": val_loss / len(validate_dataloader),
+                        "confusion_outputs": confusion_outputs,
                     }
                 )
                 torch.save(
