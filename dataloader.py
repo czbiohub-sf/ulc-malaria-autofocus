@@ -15,24 +15,21 @@ from typing import List, Dict, Union, Tuple, Optional, Callable
 
 
 class ImageFolderWithLabels(datasets.ImageFolder):
-    """ ImageFolder with minor modifications to make training/use easier
+    """ImageFolder with minor modifications to make training/use easier
 
     Changes:
         - save the idx_to_class in the instance so the target_transform to folder name is quick
         - `sample_from_class` method that quickly gives a sample of a given class of a given size
         - exclude_classes kwarg for excluding class subsets
     """
-    def __init__(
-            self,
-            *args,
-            exclude_classes: List[Union[int, str]] = [],
-            include_classes: List[Union[int, str]] = [],
-            **kwargs):
+
+    def __init__(self, *args, exclude_classes: List[Union[int, str]] = [], **kwargs):
         self.exclude_classes = [str(excl) for excl in exclude_classes]
 
         super().__init__(*args, **kwargs)
 
         self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
+
         def target_transform(idx):
             return int(self.idx_to_class[idx])
 
@@ -106,10 +103,21 @@ def get_dataset(
 
 
 def get_dataloader(
-    root_dir: str, batch_size: int, split_percentages: List[float] = [1]
+    root_dir: str,
+    batch_size: int,
+    split_percentages: List[float] = [1],
+    exclude_classes: List[str] = [],
+    prefetch_factor: int = 2,
 ):
-    split_datasets = get_dataset(root_dir, batch_size, split_percentages)
+    split_datasets = get_dataset(
+        root_dir, batch_size, split_percentages, exclude_classes
+    )
     return [
-        DataLoader(split_dataset, batch_size=batch_size, shuffle=True)
+        DataLoader(
+            split_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            prefetch_factor=prefetch_factor,
+        )
         for split_dataset in split_datasets
     ]
