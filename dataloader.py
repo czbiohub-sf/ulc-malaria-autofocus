@@ -107,7 +107,6 @@ def get_dataloader(
     batch_size: int,
     split_percentages: List[float] = [1],
     exclude_classes: List[str] = [],
-    prefetch_factor: int = 2,
 ):
     split_datasets = get_dataset(
         root_dir, batch_size, split_percentages, exclude_classes
@@ -117,7 +116,6 @@ def get_dataloader(
             split_dataset,
             batch_size=batch_size,
             shuffle=True,
-            prefetch_factor=prefetch_factor,
         )
         for split_dataset in split_datasets
     ]
