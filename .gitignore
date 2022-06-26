@@ -7,3 +7,4 @@ __pycache__
 wandb
 training_data
 trained_models
+vis
