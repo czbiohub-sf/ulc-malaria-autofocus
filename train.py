@@ -22,14 +22,14 @@ from visualize_trained import get_confusion_data
 from copy import deepcopy
 
 
-EPOCHS = 32
+EPOCHS = 64
 ADAM_LR = 3e-4
 BATCH_SIZE = 128
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
 
-exclude_classes = list(range(-34, -20)) + list(range(21, 47))
+exclude_classes = []
 test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
     DATA_DIRS,
     BATCH_SIZE,
@@ -55,6 +55,7 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = Adam(net.parameters(), lr=ADAM_LR)
+    confusion_tbl = wandb.Table(columns=["step", "confusion_data"])
 
     for epoch in range(EPOCHS):
         for i, data in enumerate(train_dataloader, 0):
@@ -71,7 +72,7 @@ def train(dev):
 
             wandb.log({"train_loss": loss, "epoch": epoch})
 
-            if i % 50 == 0:
+            if i % 100 == 0:
                 val_loss = 0.0
                 for data in validate_dataloader:
                     imgs, labels = data
@@ -89,10 +90,10 @@ def train(dev):
                     sample_size=BATCH_SIZE,
                     device=device,
                 )
+                confusion_tbl.add_data(i, confusion_outputs)
                 wandb.log(
                     {
-                        "avg_val_loss": val_loss / len(validate_dataloader),
-                        "confusion_outputs": confusion_outputs,
+                        "val_loss": val_loss / len(validate_dataloader),
                     }
                 )
                 torch.save(
@@ -116,7 +117,12 @@ def train(dev):
             loss = L2(outputs, labels.float())
             test_loss += loss.item()
 
-    wandb.log({"average test loss": test_loss / len(test_dataloader)})
+    wandb.log(
+        {
+            "test_loss": test_loss / len(test_dataloader),
+            "confusion_table": confusion_tbl,
+        }
+    )
     print(f"final average test loss: {test_loss / len(test_dataloader)}")
     torch.save(
         {
