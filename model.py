@@ -7,18 +7,18 @@ class AutoFocus(nn.Module):
         super().__init__()
         self.conv_block_1 = nn.Sequential(
             nn.Conv2d(1, 32, 11, padding="same"),
-            nn.GELU(),
+            nn.LeakyReLU(),
             nn.MaxPool2d(5),
         )
         self.conv_block_2 = nn.Sequential(
             nn.Conv2d(32, 32, 11, padding="same"),
-            nn.GELU(),
+            nn.LeakyReLU(),
             nn.MaxPool2d(5),
             nn.Flatten(start_dim=1),
         )
         self.fc_block = nn.Sequential(
             nn.Linear(1536, 1024),
-            nn.GELU(),
+            nn.LeakyReLU(),
             nn.Dropout(0.5),
             nn.Linear(1024, 1)
         )
