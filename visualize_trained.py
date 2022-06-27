@@ -25,6 +25,10 @@ DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_tr
 
 
 def get_confusion_data(net, dataset, sample_size=100, device=torch.device("cpu")):
+    prev_net_state = net.training
+
+    net.eval()
+
     outputs, variances = [], []
     classes_in_order = sorted([int(c) for c in dataset.classes])
     for clss in classes_in_order:
@@ -35,6 +39,8 @@ def get_confusion_data(net, dataset, sample_size=100, device=torch.device("cpu")
             output_var = out.var(unbiased=True)
         outputs.append(output_num)
         variances.append(output_var)
+
+    net.train(prev_net_state)
 
     return classes_in_order, outputs, variances
 
@@ -49,7 +55,7 @@ if __name__ == "__main__":
     model_save = torch.load(sys.argv[1], map_location=torch.device("cpu"))
 
     net = AutoFocus()
-    net.train(False)
+    net.eval()
     net.load_state_dict(model_save["model_state_dict"])
 
     sample_size = 5
