@@ -22,7 +22,7 @@ from visualize_trained import get_confusion_data
 from copy import deepcopy
 
 
-EPOCHS = 64
+EPOCHS = 128
 ADAM_LR = 3e-4
 BATCH_SIZE = 128
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -58,7 +58,7 @@ def train(dev):
     confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_var"])
 
     for epoch in range(EPOCHS):
-        for i, data in enumerate(train_dataloader, 0):
+        for i, data in enumerate(train_dataloader, 1):
             imgs, labels = data
             imgs = imgs.to(dev)
             labels = labels.to(dev)
@@ -127,7 +127,6 @@ def train(dev):
             "confusion_table": confusion_tbl,
         }
     )
-    print(f"final average test loss: {test_loss / len(test_dataloader)}")
     torch.save(
         {
             "epoch": epoch,
