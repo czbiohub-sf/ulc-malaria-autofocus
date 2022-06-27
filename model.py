@@ -19,7 +19,7 @@ class AutoFocus(nn.Module):
         self.fc_block = nn.Sequential(
             nn.Linear(1536, 1024),
             nn.LeakyReLU(),
-            nn.Dropout(0.5),  # turn off for inference?
+            nn.Dropout(0.5),
             nn.Linear(1024, 1)
         )
 
