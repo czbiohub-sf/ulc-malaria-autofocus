@@ -55,7 +55,7 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = Adam(net.parameters(), lr=ADAM_LR)
-    confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_var"])
+    confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_stddev"])
 
     for epoch in range(EPOCHS):
         for i, data in enumerate(train_dataloader, 1):
@@ -87,13 +87,13 @@ def train(dev):
                         val_loss += loss.item()
                 net.train()
 
-                _, confusion_outputs, confusion_variances = get_confusion_data(
+                _, confusion_outputs, confusion_stddev = get_confusion_data(
                     net,
                     validate_dataloader.dataset.dataset,
                     sample_size=BATCH_SIZE,
                     device=device,
                 )
-                confusion_tbl.add_data(confusion_outputs, confusion_variances)
+                confusion_tbl.add_data(confusion_outputs, confusion_stddev)
                 wandb.log(
                     {
                         "val_loss": val_loss / len(validate_dataloader),
