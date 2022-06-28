@@ -27,13 +27,14 @@ ADAM_LR = 3e-4
 BATCH_SIZE = 128
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
+#DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
+DATA_DIRS = "/tmp/training_data"
 
 exclude_classes = []
 test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
     DATA_DIRS,
     BATCH_SIZE,
-    [0.2, 0.05, 0.75],
+    [0.2, 0.03, 0.77],
     exclude_classes=exclude_classes,
 )
 
@@ -70,7 +71,7 @@ def train(dev):
             loss.backward()
             optimizer.step()
 
-            wandb.log({"train_loss": loss, "epoch": epoch})
+            wandb.log({"train_loss": loss.item(), "epoch": epoch})
 
             if i % 100 == 0:
                 val_loss = 0.0
