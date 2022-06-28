@@ -116,6 +116,7 @@ def get_dataloader(
             split_dataset,
             batch_size=batch_size,
             shuffle=True,
+            drop_last=True
         )
         for split_dataset in split_datasets
     ]
