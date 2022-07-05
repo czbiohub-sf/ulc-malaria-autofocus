@@ -22,7 +22,7 @@ from visualize_trained import get_confusion_data
 from copy import deepcopy
 
 
-EPOCHS = 128
+EPOCHS = 256
 ADAM_LR = 3e-4
 BATCH_SIZE = 128
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

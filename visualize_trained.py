@@ -36,8 +36,8 @@ def get_confusion_data(net, dataset, sample_size=100, device=torch.device("cpu")
         with torch.no_grad():
             out = net(samples)
             output_stddev, output_mean = torch.std_mean(out, unbiased=True)
-        outputs.append(output_num)
-        std_devs.append(output_stddev)
+        outputs.append(output_mean.item())
+        std_devs.append(output_stddev.item())
 
     net.train(prev_net_state)
 
