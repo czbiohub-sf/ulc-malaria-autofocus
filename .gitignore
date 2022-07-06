@@ -1,9 +1,11 @@
 .python-version
-
-env
 __pycache__
 
+
+*.onnx
 *.out
+
+env
 wandb
 training_data
 trained_models
