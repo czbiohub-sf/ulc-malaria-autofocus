@@ -3,10 +3,28 @@
 import sys
 
 import onnx
+import onnxruntime
+
 import torch
 import torchvision
 
+import numpy as np
+
 from model import AutoFocus
+
+
+"""
+Learning from https://pytorch.org/tutorials/advanced/super_resolution_with_onnxruntime.html
+"""
+
+
+def to_numpy(tensor):
+    return (
+        tensor.detach().cpu().numpy()
+        if tensor.requires_grad
+        else tensor.cpu().numpy()
+    )
+
 
 
 if __name__ == "__main__":
@@ -19,13 +37,14 @@ if __name__ == "__main__":
     net = AutoFocus()
     net.eval()
 
-    # TODO CPU vs GPU vs whatever else
+    # TODO CPU vs GPU vs whatever else?
     model_save = torch.load(pth_filename, map_location=torch.device("cpu"))
     net.load_state_dict(model_save["model_state_dict"])
 
-    dummy_input = torch.randn(1, 1, 150, 200)
+    dummy_input = torch.randn(1, 1, 150, 200, requires_grad=True)
+    torch_out = net(dummy_input)
 
-    torch.onnx.export(net, dummy_input, "autofocus.onnx", verbose=True)
+    torch.onnx.export(net, dummy_input, "autofocus.onnx", verbose=False)
 
     # Load the ONNX model
     model = onnx.load("autofocus.onnx")
@@ -33,5 +52,19 @@ if __name__ == "__main__":
     # Check that the model is well formed
     onnx.checker.check_model(model)
 
+    # Compare model output from pure torch and onnx
+    ort_session = onnxruntime.InferenceSession("autofocus.onnx")
+    ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(dummy_input)}
+    ort_outs = ort_session.run(None, ort_inputs)
+
+    np.testing.assert_allclose(
+        to_numpy(torch_out),
+        ort_outs[0],
+        rtol=1e-3,
+        atol=1e-5,
+        err_msg="onnx and pytorch outputs are far apart"
+    )
+
     # Print a human readable representation of the graph
+    print("Export successful")
     print(onnx.helper.printable_graph(model.graph))
