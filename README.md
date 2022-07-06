@@ -58,4 +58,4 @@ which should create a `.onnx` file. Then run
 mo --input_model <PATH_TO_YOUR_onnx>
 ```
 
-You should then have a `.bin` and a `.xml` file, which act as the intermediate representation of your model.
+You should then have a `.bin` and a `.xml` file, which act as the intermediate representation of your model. You can then `rsync` or `scp` the `.bin` and `.xml` files from wherever you need them!
