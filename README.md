@@ -91,6 +91,11 @@ cmake \
   && make --jobs=$(nproc --all)
 ```
 
+And we have to add `openvino` to the `PYTHONPATH` variable. Add this to `~/.bashrc`:
+```console
+export PYTHONPATH=/home/pi/openvino/bin/armv7l/Release/lib/python_api/python3.7:$PYTHONPATH
+```
+
 
 ## OpenVino Performance Optimizations!
 
