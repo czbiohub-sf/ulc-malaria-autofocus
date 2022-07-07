@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import sys
+import time
 
 import numpy as np
 
@@ -14,6 +15,8 @@ from torchvision.transforms import (
     RandomHorizontalFlip,
     RandomVerticalFlip,
 )
+
+import matplotlib.pyplot as plt
 
 from model import AutoFocus
 from dataloader import get_dataset
@@ -45,34 +48,26 @@ def get_confusion_data(net, dataset, sample_size=100, device=torch.device("cpu")
 
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
-    assert len(sys.argv) == 2, "usage: ./visualize_trained.py <PATH TO PTH>"
+    assert len(sys.argv) == 3, "usage: ./visualize_trained.py <PATH TO PTH> <PATH TO IMAGE>"
 
     dev = torch.device("cpu")
 
-    model_save = torch.load(sys.argv[1], map_location=torch.device("cpu"))
+    model_save = torch.load(sys.argv[1], map_location=dev)
 
     net = AutoFocus()
     net.eval()
     net.load_state_dict(model_save["model_state_dict"])
+    net.to(dev)
 
-    sample_size = 5
-    [full_dataset_subset] = get_dataset("training_data", sample_size)
-    full_dataset = full_dataset_subset.dataset
-    classes_in_order, outputs, std_devs = get_confusion_data(
-        net, full_dataset, sample_size=sample_size
+    img = read_image(sys.argv[2])
+    transforms = Compose(
+        [Resize([150, 200])]
     )
-    outputs = np.asarray(outputs)
-    std_devs = np.asarray(std_devs)
-    plt.scatter(classes_in_order, classes_in_order, s=2)
-    plt.scatter(classes_in_order, [np.round(o) for o in outputs], c="red", s=2)
-    plt.fill_between(
-        classes_in_order,
-        outputs - std_devs,
-        outputs + std_devs,
-        alpha=0.2,
-        edgecolor="#1B2ACC",
-        facecolor="#089FFF",
-    )
-    plt.show()
+    preprocessed = transforms(img)
+    preprocessed.unsqueeze_(dim=0)
+    preprocessed.to(dev)
+
+    t0 = time.perf_counter()
+    res = net(preprocessed)
+    t1 = time.perf_counter()
+    print(t1 - t0)
