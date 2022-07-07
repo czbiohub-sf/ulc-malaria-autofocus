@@ -64,6 +64,8 @@ You should then have a `.bin` and a `.xml` file, which act as the intermediate r
 
 ## Low Signal-to-noise ratio preparation of OpenVino
 
+_I wish I knew about [this link](https://stackoverflow.com/collectives/intel/articles/72141365/how-to-convert-pytorch-model-and-run-it-with-openvino) before hand_
+
 __vaguely following https://github.com/openvinotoolkit/openvino/wiki/CMakeOptionsForCustomCompilation#building-with-custom-opencv__
 
 After installing opencv and cmake, you can run
