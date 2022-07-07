@@ -67,7 +67,8 @@ if __name__ == "__main__":
     preprocessed.unsqueeze_(dim=0)
     preprocessed.to(dev)
 
-    t0 = time.perf_counter()
-    res = net(preprocessed)
-    t1 = time.perf_counter()
-    print(t1 - t0)
+    with torch.no_grad():
+        t0 = time.perf_counter()
+        res = net(preprocessed)
+        t1 = time.perf_counter()
+    print(f"got {res} in {t1 - t0} sec")
