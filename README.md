@@ -101,6 +101,12 @@ export PYTHONPATH=/home/pi/openvino/bin/armv7l/Release/lib/python_api/python3.7:
 
 ## OpenVino Performance Optimizations!
 
+### Benchmark App
+
+[here it is](https://docs.openvino.ai/latest/openvino_inference_engine_tools_benchmark_tool_README.html#run-the-tool)
+
+I don't really know what it is, but prob worth looking into?
+
 ### Measuring Performance
 
 [Getting Performance Numbers](https://docs.openvino.ai/latest/openvino_docs_MO_DG_Getting_Performance_Numbers.html#doxid-openvino-docs-m-o-d-g-getting-performance-numbers)
