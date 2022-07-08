@@ -74,13 +74,15 @@ def get_dataset(
     batch_size: int,
     split_percentages: List[float] = [1],
     exclude_classes: List[str] = [],
+    training: bool = True
 ):
     assert (
         sum(split_percentages) == 1
     ), f"split_percentages must add to 1 - got {split_percentages}"
 
+    augmentations = [RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)] if training else []
     transforms = Compose(
-        [Resize([150, 200]), RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)]
+        [Resize([150, 200]), *augmentations]
     )
     full_dataset = ImageFolderWithLabels(
         root=root_dir,
@@ -107,9 +109,10 @@ def get_dataloader(
     batch_size: int,
     split_percentages: List[float] = [1],
     exclude_classes: List[str] = [],
+    training: bool = True
 ):
     split_datasets = get_dataset(
-        root_dir, batch_size, split_percentages, exclude_classes
+        root_dir, batch_size, split_percentages, exclude_classes, training=training
     )
     return [
         DataLoader(split_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
