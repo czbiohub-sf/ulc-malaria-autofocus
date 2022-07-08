@@ -17,7 +17,7 @@ from torchvision.transforms import (
 import wandb
 from model import AutoFocus
 from dataloader import get_dataloader
-from visualize_trained import get_confusion_data
+from nn_analysis import get_confusion_data
 
 from copy import deepcopy
 

@@ -46,9 +46,10 @@ def get_confusion_data(net, dataset, sample_size=100, device=torch.device("cpu")
     return classes_in_order, outputs, std_devs
 
 
-def load_image_data(path_to_data: str):
+def load_image_data(path_to_data: str, dev=torch.device("cpu")):
     "takes a path to either a single png image or a folder of pngs"
-    data = [data_path] if data_path.is_file() else data_path.glob("*.png")
+    datapath = Path(path_to_data)
+    data = [datapath] if datapath.is_file() else datapath.glob("*.png")
     transforms = Resize([150, 200])
     for img_name in sorted(data):
         if img_name == "":
@@ -74,7 +75,7 @@ def load_model_for_inference(path_to_pth: str, dev=torch.device("cpu")):
 if __name__ == "__main__":
     assert (
         len(sys.argv) == 3
-    ), "usage: ./visualize_trained.py <PATH TO PTH> <PATH TO IMAGE>"
+    ), f"usage: {sys.argv[0]} <PATH TO PTH> <PATH TO IMAGE>"
 
     net = load_model_for_inference(sys.argv[1])
 
@@ -84,7 +85,7 @@ if __name__ == "__main__":
     for img_name, img in load_image_data(sys.argv[2]):
         with torch.no_grad():
             t0 = time.perf_counter()
-            res = net(preprocessed)
+            res = net(img)
             t1 = time.perf_counter()
 
         matches = re.search("(\d+)\.png", str(img_name))
