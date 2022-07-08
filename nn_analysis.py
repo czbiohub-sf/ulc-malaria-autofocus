@@ -62,7 +62,7 @@ def load_image_data(path_to_data: str, dev=torch.device("cpu")):
 
 
 def load_model_for_inference(path_to_pth: str, dev=torch.device("cpu")):
-    model_save = torch.load(sys.argv[1], map_location=dev)
+    model_save = torch.load(path_to_pth, map_location=dev)
 
     net = AutoFocus()
     net.eval()

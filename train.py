@@ -20,6 +20,7 @@ from dataloader import get_dataloader
 from nn_analysis import get_confusion_data
 
 from copy import deepcopy
+from typing import List
 
 
 EPOCHS = 256
@@ -30,7 +31,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
 DATA_DIRS = "/tmp/training_data"
 
-exclude_classes = []
+exclude_classes: List[str] = []
 test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
     DATA_DIRS,
     BATCH_SIZE,
