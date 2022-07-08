@@ -1,15 +1,19 @@
 #! /usr/bin/env python3
 
+import re
 import sys
 import time
 
 import numpy as np
 
+from pathlib import Path
+
 import torch
 from torchvision import datasets
-from torchvision.io import read_image
+from torchvision.io import read_image, ImageReadMode
 from torch.utils.data import DataLoader, random_split
 from torchvision.transforms import (
+    ToTensor,
     Compose,
     Resize,
     RandomHorizontalFlip,
@@ -20,11 +24,6 @@ import matplotlib.pyplot as plt
 
 from model import AutoFocus
 from dataloader import get_dataset
-
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
 
 
 def get_confusion_data(net, dataset, sample_size=100, device=torch.device("cpu")):
@@ -47,11 +46,21 @@ def get_confusion_data(net, dataset, sample_size=100, device=torch.device("cpu")
     return classes_in_order, outputs, std_devs
 
 
-if __name__ == "__main__":
-    assert len(sys.argv) == 3, "usage: ./visualize_trained.py <PATH TO PTH> <PATH TO IMAGE>"
+def load_image_data(path_to_data: str):
+    "takes a path to either a single png image or a folder of pngs"
+    data = [data_path] if data_path.is_file() else data_path.glob("*.png")
+    transforms = Resize([150, 200])
+    for img_name in sorted(data):
+        if img_name == "":
+            continue
+        image = read_image(str(img_name), mode=ImageReadMode.GRAY)
+        preprocessed = transforms(image)
+        preprocessed.unsqueeze_(dim=0)
+        preprocessed.to(dev)
+        yield img_name, preprocessed
 
-    dev = torch.device("cpu")
 
+def load_model_for_inference(path_to_pth: str, dev=torch.device("cpu")):
     model_save = torch.load(sys.argv[1], map_location=dev)
 
     net = AutoFocus()
@@ -59,16 +68,33 @@ if __name__ == "__main__":
     net.load_state_dict(model_save["model_state_dict"])
     net.to(dev)
 
-    img = read_image(sys.argv[2])
-    transforms = Compose(
-        [Resize([150, 200])]
-    )
-    preprocessed = transforms(img)
-    preprocessed.unsqueeze_(dim=0)
-    preprocessed.to(dev)
+    return net
 
-    with torch.no_grad():
-        t0 = time.perf_counter()
-        res = net(preprocessed)
-        t1 = time.perf_counter()
-    print(f"got {res} in {t1 - t0} sec")
+
+if __name__ == "__main__":
+    assert (
+        len(sys.argv) == 3
+    ), "usage: ./visualize_trained.py <PATH TO PTH> <PATH TO IMAGE>"
+
+    net = load_model_for_inference(sys.argv[1])
+
+    motor_steps = []
+    preds = []
+
+    for img_name, img in load_image_data(sys.argv[2]):
+        with torch.no_grad():
+            t0 = time.perf_counter()
+            res = net(preprocessed)
+            t1 = time.perf_counter()
+
+        matches = re.search("(\d+)\.png", str(img_name))
+        if matches is not None:
+            num = int(matches.group(1))
+            motor_steps.append(num)
+            preds.append(res.item())
+
+            print(f"{num} got {res.item()} in {t1 - t0} sec")
+
+    plt.plot(motor_steps, preds)
+    plt.title("Motor position from home vs. predicted steps from focus (on my Mac)")
+    plt.show()
