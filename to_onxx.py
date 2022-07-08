@@ -20,11 +20,8 @@ Learning from https://pytorch.org/tutorials/advanced/super_resolution_with_onnxr
 
 def to_numpy(tensor):
     return (
-        tensor.detach().cpu().numpy()
-        if tensor.requires_grad
-        else tensor.cpu().numpy()
+        tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
     )
-
 
 
 if __name__ == "__main__":
@@ -62,7 +59,7 @@ if __name__ == "__main__":
         ort_outs[0],
         rtol=1e-3,
         atol=1e-5,
-        err_msg="onnx and pytorch outputs are far apart"
+        err_msg="onnx and pytorch outputs are far apart",
     )
 
     # Print a human readable representation of the graph

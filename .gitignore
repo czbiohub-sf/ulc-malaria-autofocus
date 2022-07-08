@@ -10,3 +10,6 @@ wandb
 training_data
 trained_models
 vis
+
+test_set
+test_set_png

@@ -112,11 +112,6 @@ def get_dataloader(
         root_dir, batch_size, split_percentages, exclude_classes
     )
     return [
-        DataLoader(
-            split_dataset,
-            batch_size=batch_size,
-            shuffle=True,
-            drop_last=True
-        )
+        DataLoader(split_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
         for split_dataset in split_datasets
     ]
