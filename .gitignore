@@ -12,3 +12,5 @@ trained_models
 test_set
 test_set_png
 investigations
+
+.ipynb_checkpoints
