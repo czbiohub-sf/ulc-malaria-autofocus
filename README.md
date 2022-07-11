@@ -77,7 +77,7 @@ git submodule update --init --recursive
 mkdir build && cd build
 ```
 
-```
+```console
 # only the MYRIAD plugin is supported, and is default "on"
 cmake \
   -DCMAKE_BUILD_TYPE=Release \
