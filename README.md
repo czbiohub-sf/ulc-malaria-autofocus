@@ -1,5 +1,10 @@
 # Single-Shot Auto Focus (SSAF) for the ULC Malaria Scope
 
+## TODO
+
+- [Adam to AdamW](https://www.fast.ai/2018/07/02/adam-weight-decay/)
+- [:eyes:](https://arxiv.org/pdf/1708.07120.pdf)
+
 ## Installation
 
 These instructions are for installation onto the BRUNO HPC at the Chan-Zuckerberg Biohub.
