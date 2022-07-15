@@ -36,7 +36,9 @@ def animate(i):
     ax.set_ylim(-50, 50)
     ax.set_title("Mean and Standard Deviation, 128 Epochs")
     l1 = ax.plot(range(-34, 47), range(-34, 47))
-    l2 = ax.errorbar(range(-34, 47), np.round(means), yerr=std_devs, fmt='o', elinewidth=1, ms=2)
+    l2 = ax.errorbar(
+        range(-34, 47), np.round(means), yerr=std_devs, fmt="o", elinewidth=1, ms=2
+    )
     return l1, l2
 
 

@@ -73,9 +73,7 @@ def load_model_for_inference(path_to_pth: str, dev=torch.device("cpu")):
 
 
 if __name__ == "__main__":
-    assert (
-        len(sys.argv) == 3
-    ), f"usage: {sys.argv[0]} <PATH TO PTH> <PATH TO IMAGE>"
+    assert len(sys.argv) == 3, f"usage: {sys.argv[0]} <PATH TO PTH> <PATH TO IMAGE>"
 
     net = load_model_for_inference(sys.argv[1])
 

@@ -17,6 +17,7 @@ from collections import namedtuple
 
 # custom dataset
 
+
 class ImagesAndPaths(ImageFolderWithLabels):
     def __getitem__(self, index):
         path, target = self.samples[index]
@@ -28,20 +29,20 @@ class ImagesAndPaths(ImageFolderWithLabels):
 
         return (sample, target), path
 
+
 dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 net = load_model_for_inference("trained_models/efficient-donkey-final.pth", dev=dev)
 
 L2 = nn.MSELoss().to(dev)
 
 full_dataset = ImagesAndPaths(
-    root = "training_data",
-    transform = Resize([150, 200]),
-    loader = read_image
+    root="training_data", transform=Resize([150, 200]), loader=read_image
 )
 
 dataloader = DataLoader(full_dataset, batch_size=1)
 
 import time
+
 t0 = time.perf_counter()
 
 Res = namedtuple("Res", ["path", "pred", "clss", "loss"])

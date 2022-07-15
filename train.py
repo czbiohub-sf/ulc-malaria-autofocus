@@ -25,10 +25,7 @@ DATA_DIRS = "/tmp/training_data"
 
 exclude_classes: List[str] = []
 test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
-    DATA_DIRS,
-    BATCH_SIZE,
-    [0.2, 0.03, 0.77],
-    exclude_classes=exclude_classes,
+    DATA_DIRS, BATCH_SIZE, [0.2, 0.03, 0.77], exclude_classes=exclude_classes,
 )
 
 wandb.init(
@@ -66,7 +63,11 @@ def train(dev):
             loss.backward()
             optimizer.step()
 
-            wandb.log({"train_loss": loss.item(), "epoch": epoch}, commit=(i % 10 == 0), step=i)
+            wandb.log(
+                {"train_loss": loss.item(), "epoch": epoch},
+                commit=(i % 10 == 0),
+                step=i,
+            )
 
             if i % 100 == 0:
                 val_loss = 0.0
@@ -89,11 +90,7 @@ def train(dev):
                     device=device,
                 )
                 confusion_tbl.add_data(confusion_outputs, confusion_stddev)
-                wandb.log(
-                    {
-                        "val_loss": val_loss / len(validate_dataloader),
-                    }
-                )
+                wandb.log({"val_loss": val_loss / len(validate_dataloader),}, step=i)
                 torch.save(
                     {
                         "epoch": epoch,
@@ -121,7 +118,8 @@ def train(dev):
         {
             "test_loss": test_loss / len(test_dataloader),
             "confusion_table": confusion_tbl,
-        }
+        },
+        step=i,
     )
     torch.save(
         {
