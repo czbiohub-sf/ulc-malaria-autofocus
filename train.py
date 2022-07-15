@@ -4,21 +4,13 @@
 import torch
 from torch import nn
 from torch.optim import AdamW
-from torch.utils.data import DataLoader, random_split
-from torchvision import datasets
-from torchvision.io import read_image
-from torchvision.transforms import (
-    Compose,
-    Resize,
-    RandomHorizontalFlip,
-    RandomVerticalFlip,
-)
 
 import wandb
 from model import AutoFocus
 from dataloader import get_dataloader
 from nn_analysis import get_confusion_data
 
+from pathlib import Path
 from copy import deepcopy
 from typing import List
 
@@ -58,6 +50,7 @@ def train(dev):
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
     confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_stddev"])
+    model_save_dir = Path(f"trained_models/{wandb.run.name}").mkdir(exist_ok=True, parents=True)
 
     for epoch in range(EPOCHS):
         for i, data in enumerate(train_dataloader, 1):
@@ -107,7 +100,7 @@ def train(dev):
                         "optimizer_state_dict": deepcopy(optimizer.state_dict()),
                         "avg_val_loss": val_loss / len(validate_dataloader),
                     },
-                    f"trained_models/{wandb.run.name}_{epoch}_{i}.pth",
+                    str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
                 )
                 net.train()
 
@@ -136,7 +129,7 @@ def train(dev):
             "optimizer_state_dict": deepcopy(optimizer.state_dict()),
             "average_test_loss": test_loss / len(test_dataloader),
         },
-        f"trained_models/{wandb.run.name}_{epoch}_{i}.pth",
+        str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
     )
 
 
