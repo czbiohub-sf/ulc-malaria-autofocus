@@ -3,7 +3,7 @@
 
 import torch
 from torch import nn
-from torch.optim import Adam
+from torch.optim import AdamW
 from torch.utils.data import DataLoader, random_split
 from torchvision import datasets
 from torchvision.io import read_image
@@ -56,7 +56,7 @@ wandb.init(
 def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
-    optimizer = Adam(net.parameters(), lr=ADAM_LR)
+    optimizer = AdamW(net.parameters(), lr=ADAM_LR)
     confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_stddev"])
 
     for epoch in range(EPOCHS):

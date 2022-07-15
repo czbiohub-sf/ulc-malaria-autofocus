@@ -4,6 +4,7 @@
 
 - [Adam to AdamW](https://www.fast.ai/2018/07/02/adam-weight-decay/)
 - [:eyes:](https://arxiv.org/pdf/1708.07120.pdf)
+- Gradient clipping!?
 
 ## Installation
 
