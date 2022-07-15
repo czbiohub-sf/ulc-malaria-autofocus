@@ -50,7 +50,8 @@ def train(dev):
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
     confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_stddev"])
-    model_save_dir = Path(f"trained_models/{wandb.run.name}").mkdir(exist_ok=True, parents=True)
+    model_save_dir = Path(f"trained_models/{wandb.run.name}")
+    model_save_dir.mkdir(exist_ok=True, parents=True)
 
     for epoch in range(EPOCHS):
         for i, data in enumerate(train_dataloader, 1):
