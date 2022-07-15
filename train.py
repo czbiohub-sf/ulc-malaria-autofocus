@@ -72,7 +72,7 @@ def train(dev):
             loss.backward()
             optimizer.step()
 
-            wandb.log({"train_loss": loss.item(), "epoch": epoch})
+            wandb.log({"train_loss": loss.item(), "epoch": epoch}, commit=(i % 10 == 0))
 
             if i % 100 == 0:
                 val_loss = 0.0
@@ -87,7 +87,6 @@ def train(dev):
                         outputs = net(imgs).reshape(-1)
                         loss = L2(outputs, labels.float())
                         val_loss += loss.item()
-                net.train()
 
                 _, confusion_outputs, confusion_stddev = get_confusion_data(
                     net,
@@ -110,6 +109,7 @@ def train(dev):
                     },
                     f"trained_models/{wandb.run.name}_{epoch}_{i}.pth",
                 )
+                net.train()
 
     net.eval()
     test_loss = 0.0
