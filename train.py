@@ -66,7 +66,7 @@ def train(dev):
             loss.backward()
             optimizer.step()
 
-            wandb.log({"train_loss": loss.item(), "epoch": epoch}, commit=(i % 10 == 0))
+            wandb.log({"train_loss": loss.item(), "epoch": epoch}, commit=(i % 10 == 0), step=i)
 
             if i % 100 == 0:
                 val_loss = 0.0
