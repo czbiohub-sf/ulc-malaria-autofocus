@@ -46,6 +46,7 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
+
     confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_stddev"])
     model_save_dir = Path(f"trained_models/{wandb.run.name}")
     model_save_dir.mkdir(exist_ok=True, parents=True)
@@ -71,7 +72,7 @@ def train(dev):
                 step=global_step,
             )
 
-            if i % 100 == 0:
+            if global_step % 100 == 0:
                 val_loss = 0.0
 
                 net.eval()
@@ -87,7 +88,6 @@ def train(dev):
 
                 wandb.log(
                     {"val_loss": val_loss / len(validate_dataloader)},
-                    step=global_step
                 )
                 _, confusion_outputs, confusion_stddev = get_confusion_data(
                     net,
