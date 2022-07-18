@@ -8,7 +8,6 @@ from torch.optim import AdamW
 import wandb
 from model import AutoFocus
 from dataloader import get_dataloader
-from nn_analysis import get_confusion_data
 
 from pathlib import Path
 from copy import deepcopy
@@ -17,14 +16,17 @@ from typing import List
 
 EPOCHS = 256
 ADAM_LR = 3e-4
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 DATA_DIRS = "/tmp/training_data"
 
 exclude_classes: List[str] = []
 test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
-    DATA_DIRS, BATCH_SIZE, [0.2, 0.03, 0.77], exclude_classes=exclude_classes,
+    DATA_DIRS,
+    BATCH_SIZE,
+    [0.2, 0.03, 0.77],
+    exclude_classes=exclude_classes,
 )
 
 wandb.init(
@@ -45,8 +47,8 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
+    scaler = torch.cuda.amp.GradScaler()
 
-    confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_stddev"])
     model_save_dir = Path(f"trained_models/{wandb.run.name}")
     model_save_dir.mkdir(exist_ok=True, parents=True)
 
@@ -60,10 +62,13 @@ def train(dev):
 
             optimizer.zero_grad()
 
-            outputs = net(imgs).reshape(-1)
-            loss = L2(outputs, labels.float())
-            loss.backward()
-            optimizer.step()
+            with torch.cuda.amp.autocast():
+                outputs = net(imgs).reshape(-1)
+                loss = L2(outputs, labels.half())
+
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
 
             wandb.log(
                 {"train_loss": loss.item(), "epoch": epoch},
@@ -71,7 +76,7 @@ def train(dev):
                 step=global_step,
             )
 
-            if global_step % 100 == 0:
+            if global_step % 10 == 0:
                 val_loss = 0.0
 
                 net.eval()
@@ -80,21 +85,14 @@ def train(dev):
                     imgs = imgs.to(dev)
                     labels = labels.to(dev)
 
-                    with torch.no_grad():
+                    with torch.no_grad(), torch.cuda.amp.autocast():
                         outputs = net(imgs).reshape(-1)
-                        loss = L2(outputs, labels.float())
+                        loss = L2(outputs, labels.half())
                         val_loss += loss.item()
 
                 wandb.log(
                     {"val_loss": val_loss / len(validate_dataloader)},
                 )
-                _, confusion_outputs, confusion_stddev = get_confusion_data(
-                    net,
-                    validate_dataloader.dataset.dataset,
-                    sample_size=BATCH_SIZE,
-                    device=device,
-                )
-                confusion_tbl.add_data(confusion_outputs, confusion_stddev)
                 torch.save(
                     {
                         "epoch": epoch,
@@ -113,17 +111,16 @@ def train(dev):
         imgs = imgs.to(dev)
         labels = labels.to(dev)
 
-        with torch.no_grad():
+        with torch.no_grad(), torch.cuda.amp.autocast():
             outputs = net(imgs).reshape(-1)
-            loss = L2(outputs, labels.float())
+            loss = L2(outputs, labels.half())
             test_loss += loss.item()
 
     wandb.log(
         {
             "test_loss": test_loss / len(test_dataloader),
-            "confusion_table": confusion_tbl,
         },
-        step=global_step
+        step=global_step,
     )
     torch.save(
         {
