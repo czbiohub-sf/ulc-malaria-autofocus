@@ -17,6 +17,7 @@ from typing import List
 EPOCHS = 256
 ADAM_LR = 3e-4
 BATCH_SIZE = 256
+VALIDATION_PERIOD = 100
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 DATA_DIRS = "/tmp/training_data"
@@ -62,7 +63,7 @@ def train(dev):
 
             optimizer.zero_grad()
 
-            with torch.cuda.amp.autocast():
+            with torch.autocast(str(dev)):
                 outputs = net(imgs).reshape(-1)
                 loss = L2(outputs, labels.half())
 
@@ -76,7 +77,7 @@ def train(dev):
                 step=global_step,
             )
 
-            if global_step % 10 == 0:
+            if global_step % VALIDATION_PERIOD == 0:
                 val_loss = 0.0
 
                 net.eval()
@@ -85,7 +86,7 @@ def train(dev):
                     imgs = imgs.to(dev)
                     labels = labels.to(dev)
 
-                    with torch.no_grad(), torch.cuda.amp.autocast():
+                    with torch.no_grad(), torch.autocast(str(dev)):
                         outputs = net(imgs).reshape(-1)
                         loss = L2(outputs, labels.half())
                         val_loss += loss.item()
@@ -111,7 +112,7 @@ def train(dev):
         imgs = imgs.to(dev)
         labels = labels.to(dev)
 
-        with torch.no_grad(), torch.cuda.amp.autocast():
+        with torch.no_grad(), torch.autocast(str(dev)):
             outputs = net(imgs).reshape(-1)
             loss = L2(outputs, labels.half())
             test_loss += loss.item()

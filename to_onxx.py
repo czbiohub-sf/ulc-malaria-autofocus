@@ -30,18 +30,27 @@ if __name__ == "__main__":
         sys.exit(1)
 
     pth_filename = sys.argv[1]
+    dev = torch.device("cpu")
 
     net = AutoFocus()
     net.eval()
+    net.half()
 
     # TODO CPU vs GPU vs whatever else?
-    model_save = torch.load(pth_filename, map_location=torch.device("cpu"))
+    model_save = torch.load(pth_filename, map_location=dev)
     net.load_state_dict(model_save["model_state_dict"])
+    net.to(dev)
 
-    dummy_input = torch.randn(1, 1, 150, 200, requires_grad=True)
+    dummy_input = torch.randn(
+        1, 1, 150, 200, requires_grad=False, device=dev, dtype=torch.float16
+    )
     torch_out = net(dummy_input)
 
-    torch.onnx.export(net, dummy_input, "autofocus.onnx", verbose=False)
+    torch.onnx.export(
+        net,
+        dummy_input,
+        "autofocus.onnx",
+    )
 
     # Load the ONNX model
     model = onnx.load("autofocus.onnx")
@@ -50,7 +59,7 @@ if __name__ == "__main__":
     onnx.checker.check_model(model)
 
     # Compare model output from pure torch and onnx
-    ort_session = onnxruntime.InferenceSession("autofocus.onnx")
+    ort_session = onnxruntime.InferenceSession(model)
     ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(dummy_input)}
     ort_outs = ort_session.run(None, ort_inputs)
 
