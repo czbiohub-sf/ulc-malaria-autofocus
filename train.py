@@ -56,7 +56,7 @@ def train(dev):
             imgs = imgs.to(dev)
             labels = labels.to(dev)
 
-            optimizer.zero_grad()
+            optimizer.zero_grad()  # possible set_to_none=True to get modest speedup
 
             outputs = net(imgs).reshape(-1)
             loss = L2(outputs, labels.float())
