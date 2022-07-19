@@ -16,7 +16,7 @@ from typing import List
 
 EPOCHS = 256
 ADAM_LR = 3e-4
-BATCH_SIZE = 256
+BATCH_SIZE = 1024
 VALIDATION_PERIOD = 100
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
