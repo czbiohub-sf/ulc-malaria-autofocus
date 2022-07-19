@@ -143,3 +143,8 @@ Would love to run inference in half precision. Training seems to go WAY faster, 
 - use Microsoft's [onnxconverter-common](https://github.com/microsoft/onnxconverter-common), which should be able to take a fp32 model and convert it to fp16
   - This is probably the best! Train in fp16, convert to onnx in fp32, convert onnx to fp16, convert fp16 onnx to IR
   - If so, I should write a `build_model.sh` type script
+
+
+#### `backward()` is blocking?
+
+It seems like, when on CPU, the call to `backward()` blocks, regardless if it is through `loss.backward()` or `scaler.scale(loss).backward()`. GPU is fine, and I think that it is only when `scaler = torch.cuda.amp.GradScaler()` is present.

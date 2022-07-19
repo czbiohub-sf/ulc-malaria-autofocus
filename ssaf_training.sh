@@ -33,7 +33,9 @@ echo
 
 nvidia-smi
 
+wandb online
 conda run python3 train.py
+wandb offline
 
 echo
 echo "removing training data..."
