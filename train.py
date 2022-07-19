@@ -46,12 +46,15 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
+
     confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_stddev"])
     model_save_dir = Path(f"trained_models/{wandb.run.name}")
     model_save_dir.mkdir(exist_ok=True, parents=True)
 
+    global_step = 0
     for epoch in range(EPOCHS):
         for i, data in enumerate(train_dataloader, 1):
+            global_step += 1
             imgs, labels = data
             imgs = imgs.to(dev)
             labels = labels.to(dev)
@@ -65,11 +68,11 @@ def train(dev):
 
             wandb.log(
                 {"train_loss": loss.item(), "epoch": epoch},
-                commit=(i % 10 == 0),
-                step=i,
+                commit=(global_step % 10 == 0),
+                step=global_step,
             )
 
-            if i % 100 == 0:
+            if global_step % 100 == 0:
                 val_loss = 0.0
 
                 net.eval()
@@ -83,6 +86,9 @@ def train(dev):
                         loss = L2(outputs, labels.float())
                         val_loss += loss.item()
 
+                wandb.log(
+                    {"val_loss": val_loss / len(validate_dataloader)},
+                )
                 _, confusion_outputs, confusion_stddev = get_confusion_data(
                     net,
                     validate_dataloader.dataset.dataset,
@@ -90,7 +96,6 @@ def train(dev):
                     device=device,
                 )
                 confusion_tbl.add_data(confusion_outputs, confusion_stddev)
-                wandb.log({"val_loss": val_loss / len(validate_dataloader),}, step=i)
                 torch.save(
                     {
                         "epoch": epoch,
@@ -119,7 +124,7 @@ def train(dev):
             "test_loss": test_loss / len(test_dataloader),
             "confusion_table": confusion_tbl,
         },
-        step=i,
+        step=global_step
     )
     torch.save(
         {
