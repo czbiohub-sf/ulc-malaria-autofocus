@@ -15,7 +15,7 @@ from copy import deepcopy
 from typing import List
 
 
-EPOCHS = 128
+EPOCHS = 256
 ADAM_LR = 3e-4
 BATCH_SIZE = 512
 VALIDATION_PERIOD = 100
@@ -124,7 +124,6 @@ def train(dev):
         {
             "test_loss": test_loss / len(test_dataloader),
         },
-        step=global_step,
     )
     torch.save(
         {
