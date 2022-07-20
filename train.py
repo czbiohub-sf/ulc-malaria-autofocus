@@ -76,7 +76,7 @@ def train(dev):
 
             wandb.log(
                 {"train_loss": loss.item(), "epoch": epoch},
-                commit=(global_step % 10 == 0),
+                commit=False,
                 step=global_step,
             )
 
@@ -101,6 +101,8 @@ def train(dev):
                     {
                         "epoch": epoch,
                         "model_state_dict": deepcopy(net.state_dict()),
+                        "gradscaler_state_dict": deepcopy(scaler.state_dict()),
+                        "clipper_state_dict": deepcopy(clipper.state_dict()),
                         "optimizer_state_dict": deepcopy(optimizer.state_dict()),
                         "avg_val_loss": val_loss / len(validate_dataloader),
                     },
@@ -108,6 +110,7 @@ def train(dev):
                 )
                 net.train()
 
+    print("done training")
     net.eval()
     test_loss = 0.0
     for data in test_dataloader:
@@ -129,8 +132,10 @@ def train(dev):
         {
             "epoch": epoch,
             "model_state_dict": deepcopy(net.state_dict()),
+            "gradscaler_state_dict": deepcopy(scaler.state_dict()),
+            "clipper_state_dict": deepcopy(clipper.state_dict()),
             "optimizer_state_dict": deepcopy(optimizer.state_dict()),
-            "average_test_loss": test_loss / len(test_dataloader),
+            "avg_val_loss": val_loss / len(validate_dataloader),
         },
         str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
     )

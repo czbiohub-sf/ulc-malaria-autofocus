@@ -41,3 +41,19 @@ class AdaptiveLRClipping:
 
         self._prev_loss = dyn_loss.item()
         return dyn_loss
+
+    def state_dict(self):
+        return {"n": self._n,
+                "mu1": self._mu1,
+                "mu2": self._mu2,
+                "beta1": self._beta1,
+                "beta2": self._beta2,
+                "prev_loss": self._prev_loss}
+
+    def load_state_dict(self, state_dict):
+        self._n = state_dict["n"]
+        self._mu1 = state_dict["mu1"]
+        self._mu2 = state_dict["mu2"]
+        self._beta1 = state_dict["beta1"]
+        self._beta2 = state_dict["beta2"]
+        self._prev_loss = state_dict["prev_loss"]
