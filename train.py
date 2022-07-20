@@ -15,7 +15,7 @@ from copy import deepcopy
 from typing import List
 
 
-EPOCHS = 256
+EPOCHS = 128
 ADAM_LR = 3e-4
 BATCH_SIZE = 512
 VALIDATION_PERIOD = 100
@@ -123,7 +123,6 @@ def train(dev):
     wandb.log(
         {
             "test_loss": test_loss / len(test_dataloader),
-            "clip_instances": clip_tbl
         },
         step=global_step,
     )
