@@ -8,7 +8,7 @@ from torch.optim import AdamW
 import wandb
 from model import AutoFocus
 from dataloader import get_dataloader
-from nn_analysis import get_confusion_data
+from alrc import AdaptiveLRClipping
 
 from pathlib import Path
 from copy import deepcopy
@@ -46,8 +46,8 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
+    clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
 
-    confusion_tbl = wandb.Table(columns=["confusion_data", "confusion_stddev"])
     model_save_dir = Path(f"trained_models/{wandb.run.name}")
     model_save_dir.mkdir(exist_ok=True, parents=True)
 
@@ -63,6 +63,7 @@ def train(dev):
 
             outputs = net(imgs).reshape(-1)
             loss = L2(outputs, labels.float())
+            loss = clipper.clip(loss)
             loss.backward()
             optimizer.step()
 
@@ -89,13 +90,6 @@ def train(dev):
                 wandb.log(
                     {"val_loss": val_loss / len(validate_dataloader)},
                 )
-                _, confusion_outputs, confusion_stddev = get_confusion_data(
-                    net,
-                    validate_dataloader.dataset.dataset,
-                    sample_size=BATCH_SIZE,
-                    device=device,
-                )
-                confusion_tbl.add_data(confusion_outputs, confusion_stddev)
                 torch.save(
                     {
                         "epoch": epoch,
@@ -122,7 +116,7 @@ def train(dev):
     wandb.log(
         {
             "test_loss": test_loss / len(test_dataloader),
-            "confusion_table": confusion_tbl,
+            "clip_instances": clip_tbl
         },
         step=global_step
     )
