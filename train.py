@@ -8,6 +8,7 @@ from torch.optim import AdamW
 import wandb
 from model import AutoFocus
 from dataloader import get_dataloader
+from alrc import AdaptiveLRClipping
 
 from pathlib import Path
 from copy import deepcopy
@@ -16,7 +17,7 @@ from typing import List
 
 EPOCHS = 256
 ADAM_LR = 3e-4
-BATCH_SIZE = 1024
+BATCH_SIZE = 512
 VALIDATION_PERIOD = 100
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -26,7 +27,7 @@ exclude_classes: List[str] = []
 test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
     DATA_DIRS,
     BATCH_SIZE,
-    [0.2, 0.03, 0.77],
+    [0.2, 0.05, 0.75],
     exclude_classes=exclude_classes,
 )
 
@@ -49,6 +50,7 @@ def train(dev):
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
     scaler = torch.cuda.amp.GradScaler()
+    clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
 
     model_save_dir = Path(f"trained_models/{wandb.run.name}")
     model_save_dir.mkdir(exist_ok=True, parents=True)
@@ -61,11 +63,12 @@ def train(dev):
             imgs = imgs.to(dev)
             labels = labels.to(dev)
 
-            optimizer.zero_grad()
+            optimizer.zero_grad()  # possible set_to_none=True to get modest speedup
 
             with torch.autocast(str(dev)):
                 outputs = net(imgs).reshape(-1)
                 loss = L2(outputs, labels.half())
+                loss = clipper.clip(loss)
 
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -120,6 +123,7 @@ def train(dev):
     wandb.log(
         {
             "test_loss": test_loss / len(test_dataloader),
+            "clip_instances": clip_tbl
         },
         step=global_step,
     )

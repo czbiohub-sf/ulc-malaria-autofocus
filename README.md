@@ -4,7 +4,6 @@
 
 - [Adam to AdamW](https://www.fast.ai/2018/07/02/adam-weight-decay/)
 - [:eyes:](https://arxiv.org/pdf/1708.07120.pdf)
-- Gradient clipping!?
 
 ## Installation
 
@@ -123,6 +122,7 @@ I don't really know what it is, but prob worth looking into?
 - [Intel speaks a bit to this WRT the NCS](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-neural-compute-stick-2-intel-ncs-2-and-16-floating-point-fp16.html)
 - [and this also from pytorch](https://pytorch.org/docs/stable/amp.html)
 - [specific fp16 optims](https://pytorch.org/docs/stable/notes/amp_examples.html)
+- [Great explanation of fp16](https://spell.ml/blog/mixed-precision-training-with-pytorch-Xuk7YBEAACAASJam)
 
 [Preprocess Faster?](https://docs.openvino.ai/latest/openvino_docs_OV_UG_Preprocessing_Details.html#doxid-openvino-docs-o-v-u-g-preprocessing-details)
 
