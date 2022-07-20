@@ -48,7 +48,6 @@ def train(dev):
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
     clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
 
-    clip_tbl = wandb.Table(columns = ["step", "loss", "clipped_loss"])
     model_save_dir = Path(f"trained_models/{wandb.run.name}")
     model_save_dir.mkdir(exist_ok=True, parents=True)
 
@@ -64,14 +63,9 @@ def train(dev):
 
             outputs = net(imgs).reshape(-1)
             loss = L2(outputs, labels.float())
-            loss = clipper.clip(loss, step=global_step)
+            loss = clipper.clip(loss)
             loss.backward()
             optimizer.step()
-            clipper.update()
-
-            v = clipper._get_prev_clip()
-            if v is not None:
-                clip_tbl.add_data(*v)
 
             wandb.log(
                 {"train_loss": loss.item(), "epoch": epoch},
