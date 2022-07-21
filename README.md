@@ -60,7 +60,7 @@ We need to convert your `.pth` file to `.onnx` and then to the Intel intermediat
 which should create a `.onnx` file. Then run
 
 ```console
-mo --input_model <PATH_TO_YOUR_onnx>
+mo --input_model <PATH_TO_YOUR_onnx> --data_type 'FP16'
 ```
 
 You should then have a `.bin` and a `.xml` file, which act as the intermediate representation of your model. You can then `rsync` or `scp` the `.bin` and `.xml` files from wherever you need them!

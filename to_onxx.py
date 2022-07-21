@@ -30,11 +30,12 @@ if __name__ == "__main__":
         sys.exit(1)
 
     pth_filename = sys.argv[1]
-    dev = torch.device("cpu")
+    dev = torch.device("cuda")
 
     net = AutoFocus()
-    net.eval()
     net.half()
+    print(next(net.parameters()).dtype)
+    net.eval()
 
     # TODO CPU vs GPU vs whatever else?
     model_save = torch.load(pth_filename, map_location=dev)
@@ -44,19 +45,28 @@ if __name__ == "__main__":
     dummy_input = torch.randn(
         1, 1, 150, 200, requires_grad=False, device=dev, dtype=torch.float16
     )
-    torch_out = net(dummy_input)
+    with torch.autocast(str(dev)):
+        torch_out = net(dummy_input)
 
-    torch.onnx.export(
-        net,
-        dummy_input,
-        "autofocus.onnx",
-    )
+        torch.onnx.export(
+            net,
+            dummy_input,
+            "autofocus.onnx",
+            verbose=True
+        )
+
 
     # Load the ONNX model
     model = onnx.load("autofocus.onnx")
 
     # Check that the model is well formed
     onnx.checker.check_model(model)
+
+    print("Export successful")
+
+    """ For some reason, onnxruntime.InferenceSession can not manage half-precision models
+        we get the text 
+            "TypeError: Unable to load from type '<class 'onnx.onnx_ml_pb2.ModelProto'>'"
 
     # Compare model output from pure torch and onnx
     ort_session = onnxruntime.InferenceSession(model)
@@ -72,5 +82,5 @@ if __name__ == "__main__":
     )
 
     # Print a human readable representation of the graph
-    print("Export successful")
     print(onnx.helper.printable_graph(model.graph))
+    """
