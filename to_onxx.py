@@ -64,5 +64,6 @@ if __name__ == "__main__":
     )
 
     # Print a human readable representation of the graph
-    print("Export successful")
     print(onnx.helper.printable_graph(model.graph))
+    print("Export successful")
+    print(f"exported to {onnx_filename}")
