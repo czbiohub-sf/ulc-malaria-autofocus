@@ -10,6 +10,7 @@ wandb
 training_data
 trained_models
 test_set
+testing_data
 test_set_png
 
 .ipynb_checkpoints

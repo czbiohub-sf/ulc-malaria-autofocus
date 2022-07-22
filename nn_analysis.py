@@ -1,24 +1,18 @@
 #! /usr/bin/env python3
 
 import re
+import csv
 import sys
 import time
+import zarr
 
 import numpy as np
 
 from pathlib import Path
 
 import torch
-from torchvision import datasets
+from torchvision.transforms import Resize
 from torchvision.io import read_image, ImageReadMode
-from torch.utils.data import DataLoader, random_split
-from torchvision.transforms import (
-    ToTensor,
-    Compose,
-    Resize,
-    RandomHorizontalFlip,
-    RandomVerticalFlip,
-)
 
 import matplotlib.pyplot as plt
 
@@ -72,15 +66,26 @@ def load_model_for_inference(path_to_pth: str, dev=torch.device("cpu")):
     return net
 
 
-if __name__ == "__main__":
-    assert len(sys.argv) == 3, f"usage: {sys.argv[0]} <PATH TO PTH> <PATH TO IMAGE>"
+def load_metadata_csv(fname: str):
+    with open(fname, "r") as f:
+        data = csv.DictReader(f)
+        return {
+            im_count: row
+            for im_count, row in enumerate(data)
+        }
 
-    net = load_model_for_inference(sys.argv[1])
+
+def open_zarr_data(fname: str):
+    return zarr.open(fname)
+
+
+def infer_image(path_to_pth, path_to_image_data):
+    net = load_model_for_inference(path_to_pth)
 
     motor_steps = []
     preds = []
 
-    for img_name, img in load_image_data(sys.argv[2]):
+    for img_name, img in load_image_data(path_to_image_data):
         with torch.no_grad():
             t0 = time.perf_counter()
             res = net(img)
@@ -96,4 +101,39 @@ if __name__ == "__main__":
 
     plt.plot(motor_steps, preds)
     plt.title("Motor position from home vs. predicted steps from focus (on my Mac)")
+    plt.show()
+
+
+if __name__ == "__main__":
+    model = load_model_for_inference("trained_models/efficient-donkey-final.pth")
+    transforms = Resize([150, 200])
+
+    image_data = open_zarr_data("testing_data/2022-07-21-161530_SSAF_start_at_peak_focus.zip")
+    metadata = load_metadata_csv("testing_data/2022-07-21-161530_SSAF_start_at_peak_focus_metadata.csv")
+    start_pos = metadata[0]["motor_pos"]
+    print(f"start pos is {start_pos}")
+
+    preds, Ys = [], []
+    print("starting inference...")
+    for step in sorted(image_data, key=int):
+        img = torch.tensor(np.array(image_data[step]))
+        img = torch.unsqueeze(img, 0)
+        img = torch.unsqueeze(img, 0)
+        preprocessed = transforms(img)
+        metadata_row = metadata[int(step)]
+
+        preds.append(model(preprocessed).item())
+        Ys.append(float(metadata_row["motor_pos"]) - float(start_pos))
+
+    print("starting plotting...")
+    ax = plt.gca()
+    print(len(Ys))
+    times = [f"{int((f / 30) // 60)}:{int((f / 30) % 60)}" for f in range(len(preds))]
+    plt.plot(range(len(times)), preds)
+    plt.plot(range(len(times)), Ys)
+    posses = [(i, t) for i, t in enumerate(times) if i % (30 * 30) == 0]
+    xposses = [t[0] for t in posses]
+    labels = [t[1] for t in posses]
+    ax.set(xticks=xposses, xticklabels=labels)
+    plt.legend(["predictions", "actuals"])
     plt.show()
