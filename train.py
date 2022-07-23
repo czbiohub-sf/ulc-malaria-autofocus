@@ -65,7 +65,7 @@ def train(dev):
             optimizer.zero_grad()  # possible set_to_none=True to get modest speedup
 
             outputs = net(imgs).reshape(-1)
-            loss = L2(outputs, labels)
+            loss = L2(outputs, labels.float())
             loss = clipper.clip(loss)
             loss.backward()
             optimizer.step()
