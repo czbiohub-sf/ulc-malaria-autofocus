@@ -65,7 +65,7 @@ def train(dev):
             optimizer.zero_grad()  # possible set_to_none=True to get modest speedup
 
             outputs = net(imgs).reshape(-1)
-            loss = L2(outputs, labels.float())
+            loss = L2(outputs, labels)
             loss = clipper.clip(loss)
             loss.backward()
             optimizer.step()
@@ -113,9 +113,9 @@ def train(dev):
         imgs = imgs.to(dev)
         labels = labels.to(dev)
 
-        with torch.no_grad():
+        with torch.no_grad(), torch.autocast(str(dev)):
             outputs = net(imgs).reshape(-1)
-            loss = L2(outputs, labels.float())
+            loss = L2(outputs, labels.half())
             test_loss += loss.item()
 
     wandb.log(
@@ -129,7 +129,7 @@ def train(dev):
             "model_state_dict": deepcopy(net.state_dict()),
             "clipper_state_dict": deepcopy(clipper.state_dict()),
             "optimizer_state_dict": deepcopy(optimizer.state_dict()),
-            "average_test_loss": test_loss / len(test_dataloader),
+            "avg_val_loss": val_loss / len(validate_dataloader),
         },
         str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
     )
