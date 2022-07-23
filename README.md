@@ -4,7 +4,6 @@
 
 - [Adam to AdamW](https://www.fast.ai/2018/07/02/adam-weight-decay/)
 - [:eyes:](https://arxiv.org/pdf/1708.07120.pdf)
-- Gradient clipping!?
 
 ## Installation
 
@@ -122,6 +121,7 @@ I don't really know what it is, but prob worth looking into?
 [Training & executing with half-precision?](https://pytorch.org/blog/accelerating-training-on-nvidia-gpus-with-pytorch-automatic-mixed-precision/)
 - [Intel speaks a bit to this WRT the NCS](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-neural-compute-stick-2-intel-ncs-2-and-16-floating-point-fp16.html)
 - [and this also from pytorch](https://pytorch.org/docs/stable/amp.html)
+- [specific fp16 optims](https://pytorch.org/docs/stable/notes/amp_examples.html)
 - [Great explanation of fp16](https://spell.ml/blog/mixed-precision-training-with-pytorch-Xuk7YBEAACAASJam)
 
 [Preprocess Faster?](https://docs.openvino.ai/latest/openvino_docs_OV_UG_Preprocessing_Details.html#doxid-openvino-docs-o-v-u-g-preprocessing-details)
@@ -131,3 +131,20 @@ I don't really know what it is, but prob worth looking into?
 [Runtime Inference Options](https://docs.openvino.ai/latest/openvino_docs_deployment_optimization_guide_dldt_optimization_guide.html#doxid-openvino-docs-deployment-optimization-guide-dldt-optimization-guide)
 
 [Model Caching or Compiling](https://docs.openvino.ai/latest/openvino_docs_OV_UG_Model_caching_overview.html#doxid-openvino-docs-o-v-u-g-model-caching-overview)
+
+
+### Half Precision
+
+Would love to run inference in half precision. Training seems to go WAY faster, and presumably inference would as well. The only issue is that converting to ONNX (via `to_onnx.py`) seems to fail. There are either malloc "memory corruption" when opening the model for inference, or issues or some issues with the export. A valid ONNX model is created, though (via the `check_model` call on line 59). When attempting to export on CPU, we get `"RuntimeError: "slow_conv2d_cpu" not implemented for 'Half'"`. Ideas to move forward:
+
+- Train on half precision, run inference on single precision
+  - we really would love it the other way around, though :grimacing:
+- What if we jump directly to the IR and run it on the NCS? I.e. don't check model outputs
+- use Microsoft's [onnxconverter-common](https://github.com/microsoft/onnxconverter-common), which should be able to take a fp32 model and convert it to fp16
+  - This is probably the best! Train in fp16, convert to onnx in fp32, convert onnx to fp16, convert fp16 onnx to IR
+  - If so, I should write a `build_model.sh` type script
+
+
+#### `backward()` is blocking?
+
+It seems like, when on CPU, the call to `backward()` blocks, regardless if it is through `loss.backward()` or `scaler.scale(loss).backward()`. GPU is fine, and I think that it is only when `scaler = torch.cuda.amp.GradScaler()` is present.
