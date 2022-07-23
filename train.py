@@ -49,7 +49,7 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
-    clipper = AdaptiveLRClipping(mu1=750, mu2=800**2)
+    clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
 
     model_save_dir = Path(f"trained_models/{wandb.run.name}")
     model_save_dir.mkdir(exist_ok=True, parents=True)
