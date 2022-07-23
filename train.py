@@ -17,15 +17,18 @@ from typing import List
 
 EPOCHS = 256
 ADAM_LR = 3e-4
-BATCH_SIZE = 128
+BATCH_SIZE = 512
+VALIDATION_PERIOD = 100
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# DATA_DIRS = "/hpc/projects/flexo/MicroscopyData/Bioengineering/LFM Scope/ssaf_trainingdata/2022-06-10-1056/training_data"
 DATA_DIRS = "/tmp/training_data"
 
 exclude_classes: List[str] = []
 test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
-    DATA_DIRS, BATCH_SIZE, [0.2, 0.03, 0.77], exclude_classes=exclude_classes,
+    DATA_DIRS,
+    BATCH_SIZE,
+    [0.2, 0.05, 0.75],
+    exclude_classes=exclude_classes,
 )
 
 wandb.init(
@@ -46,7 +49,7 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
-    clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
+    clipper = AdaptiveLRClipping(mu1=750, mu2=800**2)
 
     model_save_dir = Path(f"trained_models/{wandb.run.name}")
     model_save_dir.mkdir(exist_ok=True, parents=True)
@@ -69,11 +72,11 @@ def train(dev):
 
             wandb.log(
                 {"train_loss": loss.item(), "epoch": epoch},
-                commit=(global_step % 10 == 0),
+                commit=False,
                 step=global_step,
             )
 
-            if global_step % 100 == 0:
+            if global_step % VALIDATION_PERIOD == 0:
                 val_loss = 0.0
 
                 net.eval()
@@ -94,6 +97,7 @@ def train(dev):
                     {
                         "epoch": epoch,
                         "model_state_dict": deepcopy(net.state_dict()),
+                        "clipper_state_dict": deepcopy(clipper.state_dict()),
                         "optimizer_state_dict": deepcopy(optimizer.state_dict()),
                         "avg_val_loss": val_loss / len(validate_dataloader),
                     },
@@ -101,6 +105,7 @@ def train(dev):
                 )
                 net.train()
 
+    print("done training")
     net.eval()
     test_loss = 0.0
     for data in test_dataloader:
@@ -116,14 +121,13 @@ def train(dev):
     wandb.log(
         {
             "test_loss": test_loss / len(test_dataloader),
-            "clip_instances": clip_tbl
         },
-        step=global_step
     )
     torch.save(
         {
             "epoch": epoch,
             "model_state_dict": deepcopy(net.state_dict()),
+            "clipper_state_dict": deepcopy(clipper.state_dict()),
             "optimizer_state_dict": deepcopy(optimizer.state_dict()),
             "average_test_loss": test_loss / len(test_dataloader),
         },
