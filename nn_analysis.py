@@ -108,8 +108,8 @@ if __name__ == "__main__":
     model = load_model_for_inference("trained_models/efficient-donkey-final.pth")
     transforms = Resize([150, 200])
 
-    image_data = open_zarr_data("testing_data/2022-07-21-161530_SSAF_start_at_peak_focus.zip")
-    metadata = load_metadata_csv("testing_data/2022-07-21-161530_SSAF_start_at_peak_focus_metadata.csv")
+    image_data = open_zarr_data("testing_data/2022-07-22-163205_ssaf-test.zip")
+    metadata = load_metadata_csv("testing_data/2022-07-22-163205_ssaf-test_metadata.csv")
     start_pos = metadata[0]["motor_pos"]
     print(f"start pos is {start_pos}")
 

@@ -148,3 +148,10 @@ Would love to run inference in half precision. Training seems to go WAY faster, 
 #### `backward()` is blocking?
 
 It seems like, when on CPU, the call to `backward()` blocks, regardless if it is through `loss.backward()` or `scaler.scale(loss).backward()`. GPU is fine, and I think that it is only when `scaler = torch.cuda.amp.GradScaler()` is present.
+
+
+### Pruning
+
+smaller model == faster model
+
+https://jacobgil.github.io/deeplearning/pruning-deep-learning
