@@ -51,8 +51,9 @@ def train(dev):
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
     clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
 
-    model_save_dir = Path(f"trained_models/{wandb.run.name}")
-    model_save_dir.mkdir(exist_ok=True, parents=True)
+    if wandb.run.name is not None:
+        model_save_dir = Path(f"trained_models/{wandb.run.name}")
+        model_save_dir.mkdir(exist_ok=True, parents=True)
 
     global_step = 0
     for epoch in range(EPOCHS):
