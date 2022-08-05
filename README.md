@@ -57,14 +57,7 @@ We need to convert your `.pth` file to `.onnx` and then to the Intel intermediat
 ./to_onnx.py <PATH_TO_YOUR_pth>
 ```
 
-which should create a `.onnx` file. Then run
-
-```console
-mo --input_model <PATH_TO_YOUR_onnx>
-```
-
-You should then have a `.bin` and a `.xml` file, which act as the intermediate representation of your model. You can then `rsync` or `scp` the `.bin` and `.xml` files from wherever you need them!
-
+which should create a `.onnx` file, a `.xml` file, and a `.bin` file. The `.bin` and `.xml` files are the intermediate representation of your model. You can then `rsync` or `scp` the `.bin` and `.xml` files from wherever you need them!
 
 
 ## Low Signal-to-noise ratio preparation of OpenVino

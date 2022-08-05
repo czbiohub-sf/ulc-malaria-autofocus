@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import sys
+import subprocess
 
 import onnx
 import onnxruntime
@@ -63,7 +64,7 @@ if __name__ == "__main__":
         err_msg="onnx and pytorch outputs are far apart",
     )
 
-    # Print a human readable representation of the graph
-    print(onnx.helper.printable_graph(model.graph))
-    print("Export successful")
-    print(f"exported to {onnx_filename}")
+    # export to IR
+    subprocess.run(["mo", "--input_model", onnx_filename])
+
+    print(f"\nexported to {onnx_filename}, {onnx_filename.replace('onnx', 'xml')}, {onnx_filename.replace('onnx', 'bin')}")
