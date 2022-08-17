@@ -2,8 +2,7 @@
 
 ## TODO
 
-- [Adam to AdamW](https://www.fast.ai/2018/07/02/adam-weight-decay/)
-- [:eyes:](https://arxiv.org/pdf/1708.07120.pdf)
+- checkout [update to fp32 matrix muls - may affect A100 matmuls](https://pytorch.org/blog/pytorch-1.12-released/#changes-to-float32-matrix-multiplication-precision-on-ampere-and-later-cuda-hardware)
 
 ## Installation
 
