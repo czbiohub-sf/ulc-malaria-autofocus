@@ -71,7 +71,6 @@ class ImageFolderWithLabels(datasets.ImageFolder):
 
 def get_dataset(
     root_dir: str,
-    batch_size: int,
     split_percentages: List[float] = [1],
     exclude_classes: List[str] = [],
     training: bool = True,
@@ -112,7 +111,7 @@ def get_dataloader(
     training: bool = True,
 ):
     split_datasets = get_dataset(
-        root_dir, batch_size, split_percentages, exclude_classes, training=training
+        root_dir, split_percentages, exclude_classes, training=training
     )
     return [
         DataLoader(split_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
