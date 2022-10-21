@@ -2,7 +2,7 @@ import os
 import torch
 
 from torchvision import datasets
-from torchvision.io import read_image
+from torchvision.io import read_image, ImageReadMode
 from torch.utils.data import DataLoader, random_split
 from torchvision.transforms import (
     Compose,
@@ -83,11 +83,11 @@ def get_dataset(
     augmentations = (
         [RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)] if training else []
     )
-    transforms = Compose([Resize([150, 200]), *augmentations])
+    transforms = Compose([Resize([300, 400]), *augmentations])
     full_dataset = ImageFolderWithLabels(
         root=root_dir,
         transform=transforms,
-        loader=read_image,
+        loader=lambda img: read_image(img, ImageReadMode.GRAY),
         exclude_classes=exclude_classes,
     )
 
