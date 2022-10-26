@@ -15,9 +15,9 @@ from copy import deepcopy
 from typing import List
 
 
-EPOCHS = 256
+EPOCHS = 128
 ADAM_LR = 3e-4
-BATCH_SIZE = 512
+BATCH_SIZE = 256
 VALIDATION_PERIOD = 100
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.backends.cuda.matmul.allow_tf32 = True
