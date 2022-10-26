@@ -69,10 +69,7 @@ def load_model_for_inference(path_to_pth: str, dev=torch.device("cpu")):
 def load_metadata_csv(fname: str):
     with open(fname, "r") as f:
         data = csv.DictReader(f)
-        return {
-            im_count: row
-            for im_count, row in enumerate(data)
-        }
+        return {im_count: row for im_count, row in enumerate(data)}
 
 
 def open_zarr_data(fname: str):
@@ -109,7 +106,9 @@ if __name__ == "__main__":
     transforms = Resize([150, 200])
 
     image_data = open_zarr_data("testing_data/2022-07-22-163205_ssaf-test.zip")
-    metadata = load_metadata_csv("testing_data/2022-07-22-163205_ssaf-test_metadata.csv")
+    metadata = load_metadata_csv(
+        "testing_data/2022-07-22-163205_ssaf-test_metadata.csv"
+    )
     start_pos = metadata[0]["motor_pos"]
     print(f"start pos is {start_pos}")
 

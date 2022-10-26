@@ -19,10 +19,7 @@ class AutoFocus(nn.Module):
             nn.Flatten(start_dim=1),
         )
         self.fc_block = nn.Sequential(
-            nn.Linear(1536, 1024),
-            nn.LeakyReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(1024, 1)
+            nn.Linear(1536, 1024), nn.LeakyReLU(), nn.Dropout(0.5), nn.Linear(1024, 1)
         )
 
     def forward(self, x: torch.Tensor):
