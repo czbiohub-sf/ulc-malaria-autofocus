@@ -53,7 +53,7 @@ def train(dev):
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
 
     anneal_period = EPOCHS * len(train_dataloader)
-    scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=5e-5)
+    scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
 
     if wandb.run.name is not None:
         model_save_dir = Path(f"trained_models/{wandb.run.name}")
