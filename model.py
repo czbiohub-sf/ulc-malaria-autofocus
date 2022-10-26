@@ -6,28 +6,36 @@ class AutoFocus(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv_block_1 = nn.Sequential(
-            nn.Conv2d(1, 32, 11, padding=(5, 5)),
+            nn.Conv2d(1, 32, 11, padding=5),
             nn.BatchNorm2d(32),
             nn.LeakyReLU(),
-            nn.MaxPool2d(5),
+            nn.MaxPool2d(5, stride=5),
         )
         self.conv_block_2 = nn.Sequential(
-            nn.Conv2d(32, 32, 11, padding=(5, 5)),
+            nn.Conv2d(32, 32, 7, padding=3),
             nn.BatchNorm2d(32),
             nn.LeakyReLU(),
-            nn.MaxPool2d(5),
-            nn.Flatten(start_dim=1),
+            nn.MaxPool2d(5, stride=2),
         )
-        self.fc_block = nn.Sequential(
-            nn.Linear(1536, 1024),
+        self.conv_block_3 = nn.Sequential(
+            nn.Conv2d(32, 32, 5, padding=2),
+            nn.BatchNorm2d(32),
             nn.LeakyReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(1024, 1)
+            nn.MaxPool2d(5, stride=2),
+        )
+        self.conv_block_4 = nn.Sequential(
+            nn.Conv2d(32, 1, 3, padding=1), nn.Flatten(start_dim=1), nn.Linear(204, 1)
         )
 
     def forward(self, x: torch.Tensor):
         x = x.float()
         x = self.conv_block_1(x)
         x = self.conv_block_2(x)
-        x = self.fc_block(x)
+        x = self.conv_block_3(x)
+        x = self.conv_block_4(x)
         return x
+
+
+if __name__ == "__main__":
+    A = AutoFocus()
+    print(A(torch.randn(10, 1, 300, 400)))

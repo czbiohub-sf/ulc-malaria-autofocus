@@ -30,8 +30,10 @@ if __name__ == "__main__":
         print("usage: ./to_onxx.py <your_file.pth> [<output_file_name.onnx>]")
         sys.exit(1)
 
-    pth_filename  = sys.argv[1]
-    onnx_filename = sys.argv[2] if len(sys.argv) == 3 else pth_filename.replace("pth", "onnx")
+    pth_filename = sys.argv[1]
+    onnx_filename = (
+        sys.argv[2] if len(sys.argv) == 3 else pth_filename.replace("pth", "onnx")
+    )
 
     net = AutoFocus()
     net.eval()
@@ -67,4 +69,6 @@ if __name__ == "__main__":
     # export to IR
     subprocess.run(["mo", "--input_model", onnx_filename])
 
-    print(f"\nexported to {onnx_filename}, {onnx_filename.replace('onnx', 'xml')}, {onnx_filename.replace('onnx', 'bin')}")
+    print(
+        f"\nexported to {onnx_filename}, {onnx_filename.replace('onnx', 'xml')}, {onnx_filename.replace('onnx', 'bin')}"
+    )
