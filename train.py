@@ -4,6 +4,7 @@
 import torch
 from torch import nn
 from torch.optim import AdamW
+from torch.optim.lr_scheduler import LinearLR, SequentialLR, CosineAnnealingLR
 
 import wandb
 from model import AutoFocus
@@ -50,7 +51,9 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
-    clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
+
+    anneal_period = EPOCHS * len(train_dataloader)
+    scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=5e-5)
 
     if wandb.run.name is not None:
         model_save_dir = Path(f"trained_models/{wandb.run.name}")
@@ -68,44 +71,46 @@ def train(dev):
 
             outputs = net(imgs).reshape(-1)
             loss = L2(outputs, labels.float())
-            loss = clipper.clip(loss)
             loss.backward()
             optimizer.step()
+            scheduler.step()
 
             wandb.log(
-                {"train_loss": loss.item(), "epoch": epoch},
+                {
+                    "train_loss": loss.item(),
+                    "epoch": epoch,
+                    "LR": scheduler.get_last_lr()[0],
+                },
                 commit=False,
                 step=global_step,
             )
 
-            if global_step % VALIDATION_PERIOD == 0:
-                val_loss = 0.0
+        val_loss = 0.0
 
-                net.eval()
-                for data in validate_dataloader:
-                    imgs, labels = data
-                    imgs = imgs.to(dev)
-                    labels = labels.to(dev)
+        net.eval()
+        for data in validate_dataloader:
+            imgs, labels = data
+            imgs = imgs.to(dev)
+            labels = labels.to(dev)
 
-                    with torch.no_grad():
-                        outputs = net(imgs).reshape(-1)
-                        loss = L2(outputs, labels.float())
-                        val_loss += loss.item()
+            with torch.no_grad():
+                outputs = net(imgs).reshape(-1)
+                loss = L2(outputs, labels.float())
+                val_loss += loss.item()
 
-                wandb.log(
-                    {"val_loss": val_loss / len(validate_dataloader)},
-                )
-                torch.save(
-                    {
-                        "epoch": epoch,
-                        "model_state_dict": deepcopy(net.state_dict()),
-                        "clipper_state_dict": deepcopy(clipper.state_dict()),
-                        "optimizer_state_dict": deepcopy(optimizer.state_dict()),
-                        "avg_val_loss": val_loss / len(validate_dataloader),
-                    },
-                    str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
-                )
-                net.train()
+        wandb.log(
+            {"val_loss": val_loss / len(validate_dataloader)},
+        )
+        torch.save(
+            {
+                "epoch": epoch,
+                "model_state_dict": deepcopy(net.state_dict()),
+                "optimizer_state_dict": deepcopy(optimizer.state_dict()),
+                "avg_val_loss": val_loss / len(validate_dataloader),
+            },
+            str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
+        )
+        net.train()
 
     print("done training")
     net.eval()
@@ -129,7 +134,6 @@ def train(dev):
         {
             "epoch": epoch,
             "model_state_dict": deepcopy(net.state_dict()),
-            "clipper_state_dict": deepcopy(clipper.state_dict()),
             "optimizer_state_dict": deepcopy(optimizer.state_dict()),
             "avg_val_loss": val_loss / len(validate_dataloader),
         },
