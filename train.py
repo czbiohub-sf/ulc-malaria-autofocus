@@ -51,6 +51,7 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
+    clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
 
     anneal_period = EPOCHS * len(train_dataloader)
     scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)

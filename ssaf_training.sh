@@ -13,6 +13,15 @@ echo
 
 env | grep "^SLURM" | sort
 
+if [[ $# -eq 0 ]]; then
+  cmd="python3 train.py"
+else
+  cmd="$@"
+fi
+
+echo "command is"
+echo $cmd
+
 echo
 echo "copying to /tmp/training_data..."
 echo
@@ -31,10 +40,11 @@ echo
 echo "starting ssaf training..."
 echo
 
+
 nvidia-smi
 
 wandb online
-conda run python3 train.py
+conda run $cmd
 wandb offline
 
 echo

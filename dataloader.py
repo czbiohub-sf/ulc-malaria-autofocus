@@ -114,6 +114,6 @@ def get_dataloader(
         root_dir, split_percentages, exclude_classes, training=training
     )
     return [
-        DataLoader(split_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+        DataLoader(split_dataset, batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True)
         for split_dataset in split_datasets
     ]
