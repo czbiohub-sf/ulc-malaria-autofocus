@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import sys
 
 import torch
 from torch import nn
@@ -19,18 +20,24 @@ from typing import List
 EPOCHS = 128
 ADAM_LR = 3e-4
 BATCH_SIZE = 256
-VALIDATION_PERIOD = 100
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.backends.cuda.matmul.allow_tf32 = True
 
-DATA_DIRS = "/tmp/training_data"
 
-exclude_classes: List[str] = []
-test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
-    DATA_DIRS,
+dataset_description_file = sys.argv[1]
+
+
+dataloaders = get_dataloader(
+    dataset_description_file,
     BATCH_SIZE,
     [0.2, 0.05, 0.75],
-    exclude_classes=exclude_classes,
+)
+
+test_dataloader, validate_dataloader, train_dataloader = (
+    dataloaders["test"],
+    dataloaders["val"],
+    dataloaders["test"],
 )
 
 wandb.init(
@@ -41,8 +48,6 @@ wandb.init(
         "batch_size": BATCH_SIZE,
         "training_set_size": len(train_dataloader),
         "device": str(device),
-        "exclude_classes": exclude_classes,
-        "classes": train_dataloader.dataset.dataset.classes,
     },
 )
 

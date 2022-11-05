@@ -34,7 +34,7 @@ def profile_run(
     test_dataloader,
     img_size,
 ):
-    print('dev is ', dev)
+    print("dev is ", dev)
     net = MockedModel().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
@@ -52,8 +52,8 @@ def profile_run(
     ) as prof:
         for i, (imgs, labels) in enumerate(train_dataloader):
             optimizer.zero_grad(set_to_none=True)
-            print('is cuda available?', torch.cuda.is_available())
-            print('in loop dev is', dev)
+            print("is cuda available?", torch.cuda.is_available())
+            print("in loop dev is", dev)
             print(imgs.device)
             imgs.cuda()
             labels.cuda()
@@ -73,10 +73,7 @@ def profile_run(
 if __name__ == "__main__":
     set_start_method("spawn")
 
-    device = torch.device(
-        "cuda" if torch.cuda.is_available() else "cpu"
-    )
-
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
         "/tmp/training_data",
