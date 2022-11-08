@@ -11,53 +11,35 @@ import wandb
 from model import AutoFocus
 from dataloader import get_dataloader
 from alrc import AdaptiveLRClipping
+from argparsers import train_parser
 
 from pathlib import Path
 from copy import deepcopy
 from typing import List
+
+torch.backends.cuda.matmul.allow_tf32 = True
 
 
 EPOCHS = 128
 ADAM_LR = 3e-4
 BATCH_SIZE = 256
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-torch.backends.cuda.matmul.allow_tf32 = True
 
-
-dataset_description_file = sys.argv[1]
-
-
-dataloaders = get_dataloader(
-    dataset_description_file,
-    BATCH_SIZE,
-    [0.2, 0.05, 0.75],
-)
-
-test_dataloader, validate_dataloader, train_dataloader = (
-    dataloaders["test"],
-    dataloaders["val"],
-    dataloaders["test"],
-)
-
-wandb.init(
-    "autofocus",
-    config={
-        "learning_rate": ADAM_LR,
-        "epochs": EPOCHS,
-        "batch_size": BATCH_SIZE,
-        "training_set_size": len(train_dataloader),
-        "device": str(device),
-        "dataset_description_file": dataset_description_file,
-    },
-)
+def checkpoint_model(model, epoch, optimizer, name):
+    torch.save(
+        {
+            "epoch": epoch,
+            "model_state_dict": deepcopy(model.state_dict()),
+            "optimizer_state_dict": deepcopy(optimizer.state_dict()),
+        },
+        str(name),
+    )
 
 
 def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
-    # clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
 
     anneal_period = EPOCHS * len(train_dataloader)
     # scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
@@ -108,14 +90,8 @@ def train(dev):
         wandb.log(
             {"val_loss": val_loss / len(validate_dataloader)},
         )
-        torch.save(
-            {
-                "epoch": epoch,
-                "model_state_dict": deepcopy(net.state_dict()),
-                "optimizer_state_dict": deepcopy(optimizer.state_dict()),
-                "avg_val_loss": val_loss / len(validate_dataloader),
-            },
-            str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
+        checkpoint_model(
+            net, epoch, optimizer, model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"
         )
         net.train()
 
@@ -127,7 +103,7 @@ def train(dev):
         imgs = imgs.to(dev)
         labels = labels.to(dev)
 
-        with torch.no_grad(), torch.autocast(str(dev)):
+        with torch.no_grad():
             outputs = net(imgs).reshape(-1)
             loss = L2(outputs, labels.half())
             test_loss += loss.item()
@@ -137,17 +113,47 @@ def train(dev):
             "test_loss": test_loss / len(test_dataloader),
         },
     )
-    torch.save(
-        {
-            "epoch": epoch,
-            "model_state_dict": deepcopy(net.state_dict()),
-            "optimizer_state_dict": deepcopy(optimizer.state_dict()),
-            "avg_val_loss": val_loss / len(validate_dataloader),
-        },
-        str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
+    checkpoint_model(
+        net, epoch, optimizer, model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"
     )
 
 
+def do_training(args):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    dataloaders = get_dataloader(
+        args.dataset_descriptor_file,
+        BATCH_SIZE,
+        [0.2, 0.05, 0.75],
+    )
+
+    test_dataloader, validate_dataloader, train_dataloader = (
+        dataloaders["test"],
+        dataloaders["val"],
+        dataloaders["test"],
+    )
+
+    wandb.init(
+        "autofocus",
+        entity="bioengineering",
+        config={
+            "learning_rate": ADAM_LR,
+            "epochs": EPOCHS,
+            "batch_size": BATCH_SIZE,
+            "training_set_size": len(train_dataloader),
+            "device": str(device),
+            "dataset_descriptor_file": args.dataset_descriptor_file,
+            "run group": args.group,
+        },
+        notes=args.note,
+        tags=["v0.0.2"],
+    )
+
+    train()
+
+
 if __name__ == "__main__":
-    print(f"using device {device}")
-    train(device)
+    parser = train_parser()
+    args = parser.parse_args()
+
+    do_training(args)
