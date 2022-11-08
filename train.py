@@ -79,11 +79,11 @@ def train(dev):
         test_dataloader,
     ) = init_dataloaders(wandb.config)
 
-    # anneal_period = EPOCHS * len(train_dataloader)
-    # scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
+    anneal_period = wandb.config["epochs"] * len(train_dataloader)
+    scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
 
     global_step = 0
-    for epoch in range(EPOCHS):
+    for epoch in range(wandb.config["epochs"]):
         for i, (imgs, labels) in enumerate(train_dataloader, 1):
             global_step += 1
             imgs = imgs.to(dev)
@@ -95,13 +95,13 @@ def train(dev):
             loss = L2(outputs, labels.float())
             loss.backward()
             optimizer.step()
-            # scheduler.step()
+            scheduler.step()
 
             wandb.log(
                 {
                     "train_loss": loss.item(),
                     "epoch": epoch,
-                    # "LR": scheduler.get_last_lr()[0],
+                    "LR": scheduler.get_last_lr()[0],
                 },
                 commit=False,
                 step=global_step,
