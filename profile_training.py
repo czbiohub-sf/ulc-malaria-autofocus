@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 
+import sys
 import torch
 
 import torch
@@ -76,9 +77,8 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
-        "/tmp/training_data",
+        sys.argv[1],
         BATCH_SIZE,
-        [0.2, 0.05, 0.75],
     )
 
     # https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html#enable-cudnn-auto-tuner

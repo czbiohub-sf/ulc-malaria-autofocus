@@ -40,7 +40,6 @@ def init_dataloaders(config):
     dataloaders = get_dataloader(
         config["dataset_descriptor_file"],
         BATCH_SIZE,
-        [0.2, 0.05, 0.75],
     )
 
     test_dataloader, validate_dataloader, train_dataloader = (
