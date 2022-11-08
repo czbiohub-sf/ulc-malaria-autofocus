@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 
+import sys
 
 import torch
 from torch import nn
 from torch.optim import AdamW
+from torch.optim.lr_scheduler import LinearLR, SequentialLR, CosineAnnealingLR
 
 import wandb
 from model import AutoFocus
@@ -15,21 +17,27 @@ from copy import deepcopy
 from typing import List
 
 
-EPOCHS = 256
+EPOCHS = 128
 ADAM_LR = 3e-4
-BATCH_SIZE = 512
-VALIDATION_PERIOD = 100
+BATCH_SIZE = 256
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.backends.cuda.matmul.allow_tf32 = True
 
-DATA_DIRS = "/tmp/training_data"
 
-exclude_classes: List[str] = []
-test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
-    DATA_DIRS,
+dataset_description_file = sys.argv[1]
+
+
+dataloaders = get_dataloader(
+    dataset_description_file,
     BATCH_SIZE,
     [0.2, 0.05, 0.75],
-    exclude_classes=exclude_classes,
+)
+
+test_dataloader, validate_dataloader, train_dataloader = (
+    dataloaders["test"],
+    dataloaders["val"],
+    dataloaders["test"],
 )
 
 wandb.init(
@@ -40,8 +48,7 @@ wandb.init(
         "batch_size": BATCH_SIZE,
         "training_set_size": len(train_dataloader),
         "device": str(device),
-        "exclude_classes": exclude_classes,
-        "classes": train_dataloader.dataset.dataset.classes,
+        "dataset_description_file": dataset_description_file,
     },
 )
 
@@ -50,7 +57,10 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
-    clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
+    # clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
+
+    anneal_period = EPOCHS * len(train_dataloader)
+    # scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
 
     if wandb.run.name is not None:
         model_save_dir = Path(f"trained_models/{wandb.run.name}")
@@ -64,48 +74,50 @@ def train(dev):
             imgs = imgs.to(dev)
             labels = labels.to(dev)
 
-            optimizer.zero_grad()  # possible set_to_none=True to get modest speedup
+            optimizer.zero_grad(set_to_none=True)
 
             outputs = net(imgs).reshape(-1)
             loss = L2(outputs, labels.float())
-            loss = clipper.clip(loss)
             loss.backward()
             optimizer.step()
+            # scheduler.step()
 
             wandb.log(
-                {"train_loss": loss.item(), "epoch": epoch},
+                {
+                    "train_loss": loss.item(),
+                    "epoch": epoch,
+                    # "LR": scheduler.get_last_lr()[0],
+                },
                 commit=False,
                 step=global_step,
             )
 
-            if global_step % VALIDATION_PERIOD == 0:
-                val_loss = 0.0
+        val_loss = 0.0
 
-                net.eval()
-                for data in validate_dataloader:
-                    imgs, labels = data
-                    imgs = imgs.to(dev)
-                    labels = labels.to(dev)
+        net.eval()
+        for data in validate_dataloader:
+            imgs, labels = data
+            imgs = imgs.to(dev)
+            labels = labels.to(dev)
 
-                    with torch.no_grad():
-                        outputs = net(imgs).reshape(-1)
-                        loss = L2(outputs, labels.float())
-                        val_loss += loss.item()
+            with torch.no_grad():
+                outputs = net(imgs).reshape(-1)
+                loss = L2(outputs, labels.float())
+                val_loss += loss.item()
 
-                wandb.log(
-                    {"val_loss": val_loss / len(validate_dataloader)},
-                )
-                torch.save(
-                    {
-                        "epoch": epoch,
-                        "model_state_dict": deepcopy(net.state_dict()),
-                        "clipper_state_dict": deepcopy(clipper.state_dict()),
-                        "optimizer_state_dict": deepcopy(optimizer.state_dict()),
-                        "avg_val_loss": val_loss / len(validate_dataloader),
-                    },
-                    str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
-                )
-                net.train()
+        wandb.log(
+            {"val_loss": val_loss / len(validate_dataloader)},
+        )
+        torch.save(
+            {
+                "epoch": epoch,
+                "model_state_dict": deepcopy(net.state_dict()),
+                "optimizer_state_dict": deepcopy(optimizer.state_dict()),
+                "avg_val_loss": val_loss / len(validate_dataloader),
+            },
+            str(model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"),
+        )
+        net.train()
 
     print("done training")
     net.eval()
@@ -129,7 +141,6 @@ def train(dev):
         {
             "epoch": epoch,
             "model_state_dict": deepcopy(net.state_dict()),
-            "clipper_state_dict": deepcopy(clipper.state_dict()),
             "optimizer_state_dict": deepcopy(optimizer.state_dict()),
             "avg_val_loss": val_loss / len(validate_dataloader),
         },

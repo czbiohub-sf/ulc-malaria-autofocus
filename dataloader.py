@@ -1,9 +1,10 @@
 import os
+import yaml
 import torch
 
 from torchvision import datasets
 from torchvision.io import read_image, ImageReadMode
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import ConcatDataset, DataLoader, random_split, Subset
 from torchvision.transforms import (
     Compose,
     Resize,
@@ -11,6 +12,7 @@ from torchvision.transforms import (
     RandomVerticalFlip,
 )
 
+from pathlib import Path
 from typing import List, Dict, Union, Tuple, Optional, Callable
 
 
@@ -20,12 +22,9 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     Changes:
         - save the idx_to_class in the instance so the target_transform to folder name is quick
         - `sample_from_class` method that quickly gives a sample of a given class of a given size
-        - exclude_classes kwarg for excluding class subsets
     """
 
-    def __init__(self, *args, exclude_classes: List[Union[int, str]] = [], **kwargs):
-        self.exclude_classes = [str(excl) for excl in exclude_classes]
-
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
@@ -47,9 +46,7 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
         "Adapted from torchvision.datasets.folder.py"
         classes = sorted(
-            entry.name
-            for entry in os.scandir(directory)
-            if entry.is_dir() and entry.name not in self.exclude_classes
+            entry.name for entry in os.scandir(directory) if entry.is_dir()
         )
         if not classes:
             raise FileNotFoundError(f"Couldn't find any class folder in {directory}.")
@@ -69,51 +66,127 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         return torch.cat(samples)
 
 
-def get_dataset(
-    root_dir: str,
-    split_percentages: List[float] = [1],
-    exclude_classes: List[str] = [],
+def load_dataset_description(
+    dataset_description,
+) -> Tuple[List[str], List[Dict[str, Path]], Dict[str, float]]:
+    with open(dataset_description, "r") as desc:
+        yaml_data = yaml.safe_load(desc)
+
+        # either we have image_path and label_path directly defined
+        # in our yaml file (describing 1 dataset exactly), or we have
+        # a nested dict structure describing each dataset description.
+        # see README.md for more detail
+
+        if "dataset_paths" in yaml_data:
+            dataset_paths = [Path(d) for d in yaml_data["dataset_paths"].values()]
+        else:
+            raise ValueError("dataset description file missing dataset_paths")
+
+        split_fractions = {
+            k: float(v) for k, v in yaml_data["dataset_split_fractions"].items()
+        }
+
+        if not sum(split_fractions.values()) == 1:
+            raise ValueError(
+                f"invalid split fractions for dataset: split fractions must add to 1, got {split_fractions}"
+            )
+
+        check_dataset_paths(dataset_paths)
+        return dataset_paths, split_fractions
+
+
+def check_dataset_paths(dataset_paths: List[Path]):
+    for dataset_desc in dataset_paths:
+        if not (dataset_desc.is_dir()):
+            raise FileNotFoundError(f"dataset not found")
+
+
+def read_grayscale(img_path):
+    try:
+        return read_image(img_path, ImageReadMode.GRAY)
+    except RuntimeError as e:
+        raise RuntimeError(f"file {img_path} threw: {e}")
+
+
+def get_datasets(
+    dataset_description_file: str,
+    batch_size: int,
     training: bool = True,
-):
-    assert (
-        sum(split_percentages) == 1
-    ), f"split_percentages must add to 1 - got {split_percentages}"
+    img_size: Tuple[int, int] = (300, 400),
+    split_fractions_override: Optional[Dict[str, float]] = None,
+) -> Dict[str, Subset[ConcatDataset[ImageFolderWithLabels]]]:
+    (
+        dataset_paths,
+        split_fractions,
+    ) = load_dataset_description(dataset_description_file)
 
     augmentations = (
         [RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)] if training else []
     )
     transforms = Compose([Resize([300, 400]), *augmentations])
-    full_dataset = ImageFolderWithLabels(
-        root=root_dir,
-        transform=transforms,
-        loader=lambda img: read_image(img, ImageReadMode.GRAY),
-        exclude_classes=exclude_classes,
+
+    full_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
+        ImageFolderWithLabels(
+            root=dataset_desc,
+            transform=transforms,
+            loader=read_grayscale,
+        )
+        for dataset_desc in dataset_paths
     )
 
-    first_split_sizes = [
-        int(rel_size * len(full_dataset)) for rel_size in split_percentages[:-1]
-    ]
-    final_split_size = [len(full_dataset) - sum(first_split_sizes)]
-    split_sizes = first_split_sizes + final_split_size
+    if split_fractions_override is not None:
+        split_fractions = split_fractions_override
 
-    assert all([sz > 0 for sz in split_sizes]) and sum(split_sizes) == len(
+    dataset_sizes = {
+        designation: int(split_fractions[designation] * len(full_dataset))
+        for designation in ["train", "val"]
+    }
+    test_dataset_size = {"test": len(full_dataset) - sum(dataset_sizes.values())}
+    split_sizes = {**dataset_sizes, **test_dataset_size}
+
+    assert all([sz > 0 for sz in split_sizes.values()]) and sum(
+        split_sizes.values()
+    ) == len(
         full_dataset
     ), f"could not create valid dataset split sizes: {split_sizes}, full dataset size is {len(full_dataset)}"
 
-    return random_split(full_dataset, split_sizes)
+    # YUCK! Want a map from the dataset designation to the set itself, but "random_split" takes a list
+    # of lengths of dataset. So we do this verbose rigamarol.
+    return dict(
+        zip(
+            ["train", "val", "test"],
+            random_split(
+                full_dataset,
+                [split_sizes["train"], split_sizes["val"], split_sizes["test"]],
+                generator=torch.Generator().manual_seed(101010),
+            ),
+        )
+    )
 
 
 def get_dataloader(
-    root_dir: str,
+    dataset_description_file: str,
     batch_size: int,
-    split_percentages: List[float] = [1],
-    exclude_classes: List[str] = [],
     training: bool = True,
+    img_size: Tuple[int, int] = (300, 400),
+    device: Union[str, torch.device] = "cpu",
+    split_fractions_override: Optional[Dict[str, float]] = None,
 ):
-    split_datasets = get_dataset(
-        root_dir, split_percentages, exclude_classes, training=training
+    split_datasets = get_datasets(
+        dataset_description_file,
+        batch_size,
+        img_size=img_size,
+        training=training,
+        split_fractions_override=split_fractions_override,
     )
-    return [
-        DataLoader(split_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-        for split_dataset in split_datasets
-    ]
+
+    d = dict()
+    for designation, dataset in split_datasets.items():
+        d[designation] = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            drop_last=True,
+            generator=torch.Generator().manual_seed(101010),
+        )
+    return d

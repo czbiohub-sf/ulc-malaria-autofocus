@@ -44,7 +44,7 @@ def load_image_data(path_to_data: str, dev=torch.device("cpu")):
     "takes a path to either a single png image or a folder of pngs"
     datapath = Path(path_to_data)
     data = [datapath] if datapath.is_file() else datapath.glob("*.png")
-    transforms = Resize([150, 200])
+    transforms = Resize([300, 400])
     for img_name in sorted(data):
         if img_name == "":
             continue
@@ -103,7 +103,7 @@ def infer_image(path_to_pth, path_to_image_data):
 
 if __name__ == "__main__":
     model = load_model_for_inference("trained_models/efficient-donkey-final.pth")
-    transforms = Resize([150, 200])
+    transforms = Resize([300, 400])
 
     image_data = open_zarr_data("testing_data/2022-07-22-163205_ssaf-test.zip")
     metadata = load_metadata_csv(

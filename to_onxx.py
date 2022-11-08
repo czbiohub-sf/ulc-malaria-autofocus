@@ -42,7 +42,7 @@ if __name__ == "__main__":
     model_save = torch.load(pth_filename, map_location=torch.device("cpu"))
     net.load_state_dict(model_save["model_state_dict"])
 
-    dummy_input = torch.randn(1, 1, 150, 200, requires_grad=False)
+    dummy_input = torch.randn(1, 1, 300, 400, requires_grad=False)
     torch_out = net(dummy_input)
 
     torch.onnx.export(net, dummy_input, onnx_filename, verbose=False)
