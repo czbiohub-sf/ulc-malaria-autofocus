@@ -101,6 +101,13 @@ def check_dataset_paths(dataset_paths: List[Path]):
             raise FileNotFoundError(f"dataset not found")
 
 
+def read_grayscale(img_path):
+    try:
+        return read_image(img_path, ImageReadMode.GRAY)
+    except RuntimeError as e:
+        raise RuntimeError(f"file {img_path} threw: {e}")
+
+
 def get_datasets(
     dataset_description_file: str,
     batch_size: int,
@@ -122,7 +129,7 @@ def get_datasets(
         ImageFolderWithLabels(
             root=dataset_desc,
             transform=transforms,
-            loader=lambda img: read_image(img, ImageReadMode.GRAY),
+            loader=read_grayscale,
         )
         for dataset_desc in dataset_paths
     )

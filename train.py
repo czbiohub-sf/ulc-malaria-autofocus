@@ -48,6 +48,7 @@ wandb.init(
         "batch_size": BATCH_SIZE,
         "training_set_size": len(train_dataloader),
         "device": str(device),
+        "dataset_description_file": dataset_description_file,
     },
 )
 
@@ -56,10 +57,10 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
-    clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
+    # clipper = AdaptiveLRClipping(mu1=450, mu2=500**2)
 
     anneal_period = EPOCHS * len(train_dataloader)
-    scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
+    # scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
 
     if wandb.run.name is not None:
         model_save_dir = Path(f"trained_models/{wandb.run.name}")
@@ -79,13 +80,13 @@ def train(dev):
             loss = L2(outputs, labels.float())
             loss.backward()
             optimizer.step()
-            scheduler.step()
+            # scheduler.step()
 
             wandb.log(
                 {
                     "train_loss": loss.item(),
                     "epoch": epoch,
-                    "LR": scheduler.get_last_lr()[0],
+                    # "LR": scheduler.get_last_lr()[0],
                 },
                 commit=False,
                 step=global_step,
