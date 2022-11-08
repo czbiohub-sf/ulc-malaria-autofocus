@@ -40,7 +40,8 @@ def load_zarr_data(path_to_zarr: str):
     data = zarr.open(path_to_zarr)
     transform = Compose([ToTensor(), Resize([300, 400])])
     for i in range(len(data)):
-        img = transform(data[i][:])
+        # cheap trick
+        img = transform(data[i][:]) * 255
         img.unsqueeze_(dim=0)
         img.to(device)
         yield img

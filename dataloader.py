@@ -123,6 +123,7 @@ def get_datasets(
     augmentations = (
         [RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)] if training else []
     )
+    # scale to [0,1]?
     transforms = Compose([Resize([300, 400]), *augmentations])
 
     full_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
