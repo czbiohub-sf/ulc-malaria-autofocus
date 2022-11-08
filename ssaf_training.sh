@@ -5,6 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --partition=gpu
+#SBATCH --gpus-per-node=a40:1
 #SBATCH --output=./slurm-outputs/slurm-%j.out
 
 echo
@@ -20,9 +21,6 @@ if [[ $# -eq 0 ]]; then
 else
   cmd="$@"
 fi
-
-echo "command is"
-echo $cmd
 
 #echo
 #echo "copying to /tmp/training_data..."

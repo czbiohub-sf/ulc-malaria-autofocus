@@ -2,6 +2,8 @@ import os
 import yaml
 import torch
 
+from torch import nn
+
 from torchvision import datasets
 from torchvision.io import read_image, ImageReadMode
 from torch.utils.data import ConcatDataset, DataLoader, random_split, Subset
@@ -108,6 +110,11 @@ def read_grayscale(img_path):
         raise RuntimeError(f"file {img_path} threw: {e}")
 
 
+class RescaleToUnit(nn.Module):
+    def forward(self, x):
+        return x.div(255)
+
+
 def get_datasets(
     dataset_description_file: str,
     batch_size: int,
@@ -124,7 +131,7 @@ def get_datasets(
         [RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)] if training else []
     )
     # scale to [0,1]?
-    transforms = Compose([Resize([300, 400]), *augmentations])
+    transforms = Compose([Resize([300, 400]), RescaleToUnit(), *augmentations])
 
     full_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
         ImageFolderWithLabels(

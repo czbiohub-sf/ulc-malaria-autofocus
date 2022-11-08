@@ -36,23 +36,57 @@ def checkpoint_model(model, epoch, optimizer, name):
     )
 
 
+def init_dataloaders(config):
+    dataloaders = get_dataloader(
+        config["dataset_descriptor_file"],
+        BATCH_SIZE,
+        [0.2, 0.05, 0.75],
+    )
+
+    test_dataloader, validate_dataloader, train_dataloader = (
+        dataloaders["test"],
+        dataloaders["val"],
+        dataloaders["test"],
+    )
+
+    wandb.config.update(
+        {
+            "training set size": f"{len(train_dataloader) * config['batch_size']} images",
+            "validation set size": f"{len(validate_dataloader) * config['batch_size']} images",
+            "testing set size": f"{len(test_dataloader) * config['batch_size']} images",
+        }
+    )
+
+    if wandb.run.name is not None:
+        model_save_dir = Path(f"trained_models/{wandb.run.name}")
+    else:
+        model_save_dir = Path(
+            f"trained_models/unnamed_run_{torch.randint(100, size=(1,)).item()}"
+        )
+    model_save_dir.mkdir(exist_ok=True, parents=True)
+
+    return model_save_dir, train_dataloader, validate_dataloader, test_dataloader
+
+
 def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
 
-    anneal_period = EPOCHS * len(train_dataloader)
-    # scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
+    (
+        model_save_dir,
+        train_dataloader,
+        validate_dataloader,
+        test_dataloader,
+    ) = init_dataloaders(wandb.config)
 
-    if wandb.run.name is not None:
-        model_save_dir = Path(f"trained_models/{wandb.run.name}")
-        model_save_dir.mkdir(exist_ok=True, parents=True)
+    # anneal_period = EPOCHS * len(train_dataloader)
+    # scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
 
     global_step = 0
     for epoch in range(EPOCHS):
-        for i, data in enumerate(train_dataloader, 1):
+        for i, (imgs, labels) in enumerate(train_dataloader, 1):
             global_step += 1
-            imgs, labels = data
             imgs = imgs.to(dev)
             labels = labels.to(dev)
 
@@ -121,18 +155,6 @@ def train(dev):
 def do_training(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    dataloaders = get_dataloader(
-        args.dataset_descriptor_file,
-        BATCH_SIZE,
-        [0.2, 0.05, 0.75],
-    )
-
-    test_dataloader, validate_dataloader, train_dataloader = (
-        dataloaders["test"],
-        dataloaders["val"],
-        dataloaders["test"],
-    )
-
     wandb.init(
         "autofocus",
         entity="bioengineering",
@@ -140,7 +162,6 @@ def do_training(args):
             "learning_rate": ADAM_LR,
             "epochs": EPOCHS,
             "batch_size": BATCH_SIZE,
-            "training_set_size": len(train_dataloader),
             "device": str(device),
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
@@ -149,7 +170,7 @@ def do_training(args):
         tags=["v0.0.2"],
     )
 
-    train()
+    train(device)
 
 
 if __name__ == "__main__":
