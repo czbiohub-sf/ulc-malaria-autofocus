@@ -34,8 +34,3 @@ class AutoFocus(nn.Module):
         x = self.conv_block_3(x)
         x = self.conv_block_4(x)
         return x
-
-
-if __name__ == "__main__":
-    A = AutoFocus()
-    print(A(torch.randn(10, 1, 300, 400)))
