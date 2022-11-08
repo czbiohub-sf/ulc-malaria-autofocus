@@ -103,7 +103,7 @@ def check_dataset_paths(dataset_paths: List[Path]):
 
 def read_grayscale(img_path):
     try:
-        return read_image(img_path, ImageReadMode.GRAY)
+        return read_image(str(img_path), ImageReadMode.GRAY)
     except RuntimeError as e:
         raise RuntimeError(f"file {img_path} threw: {e}")
 

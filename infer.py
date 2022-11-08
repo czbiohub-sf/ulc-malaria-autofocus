@@ -5,6 +5,7 @@ import zarr
 
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 
 from pathlib import Path
 from model import AutoFocus
@@ -31,7 +32,7 @@ def load_image_data(path_to_data: str):
         preprocessed = transforms(image)
         preprocessed.unsqueeze_(dim=0)
         preprocessed.to(device)
-        yield img_name, preprocessed
+        yield preprocessed
 
 
 def load_zarr_data(path_to_zarr: str):
