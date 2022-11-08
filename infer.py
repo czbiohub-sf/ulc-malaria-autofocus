@@ -6,14 +6,12 @@ import zarr
 import torch
 import numpy as np
 
-from tqdm import tqdm
 from pathlib import Path
-
-from torchvision.transforms import Resize, Compose, ToTensor
-
 from model import AutoFocus
 from argparsers import infer_parser
-from dataloader import get_dataset, read_grayscale
+from dataloader import get_datasets, read_grayscale
+
+from torchvision.transforms import Resize, Compose, ToTensor
 
 
 def choose_device():
@@ -39,9 +37,10 @@ def load_image_data(path_to_data: str):
 def load_zarr_data(path_to_zarr: str):
     device = choose_device()
     data = zarr.open(path_to_zarr)
-    transform = Compose(Resize([300, 400]), ToTensor())
+    transform = Compose([ToTensor(), Resize([300, 400])])
     for i in range(len(data)):
         img = transform(data[i][:])
+        img.unsqueeze_(dim=0)
         img.to(device)
         yield img
 
@@ -69,9 +68,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     model = load_model_for_inference(args.pth_path)
-    image_loader = load_image_data(args.images) if no_zarr else load_zarr_data(args.zarr)
+    image_loader = (
+        load_image_data(args.images) if no_zarr else load_zarr_data(args.zarr)
+    )
 
-    for image in tqdm(image_loader):
-        res = model(image)
-
-        print(res)
+    with torch.no_grad():
+        for image in image_loader:
+            res = model(image)
+            print(res.item())
