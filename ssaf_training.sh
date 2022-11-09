@@ -24,4 +24,8 @@ wandb online
 conda run "$@"
 wandb offline
 
-rm -rf /tmp/training_data
+
+if [ $(squeue -u axel.jacobsen -t RUNNING | wc -l) -eq 2 ];
+then
+  rm -rf /tmp/training_data
+fi
