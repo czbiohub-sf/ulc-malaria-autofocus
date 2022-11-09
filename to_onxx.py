@@ -11,6 +11,7 @@ import torchvision
 
 import numpy as np
 
+from pathlib import Path
 from model import AutoFocus
 
 
@@ -30,10 +31,14 @@ if __name__ == "__main__":
         print("usage: ./to_onxx.py <your_file.pth> [<output_file_name.onnx>]")
         sys.exit(1)
 
-    pth_filename = sys.argv[1]
-    onnx_filename = (
-        sys.argv[2] if len(sys.argv) == 3 else pth_filename.replace("pth", "onnx")
+    pth_filename = Path(sys.argv[1])
+    if not pth_filename.exists():
+        raise ValueError(f"no file found at {pth_filename}")
+
+    onnx_path = (
+        Path(sys.argv[2]) if len(sys.argv) == 3 else pth_filename.with_suffix(".onnx")
     )
+    onnx_filename = str(onnx_path)
 
     net = AutoFocus()
     net.eval()
@@ -67,7 +72,7 @@ if __name__ == "__main__":
     )
 
     # export to IR
-    subprocess.run(["mo", "--input_model", onnx_filename])
+    subprocess.run(["mo", "--input_model", onnx_filename, "--output_dir", str(onnx_path.parent)])
 
     print(
         f"\nexported to {onnx_filename}, {onnx_filename.replace('onnx', 'xml')}, {onnx_filename.replace('onnx', 'bin')}"
