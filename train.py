@@ -66,6 +66,8 @@ def init_dataloaders(config):
 
 
 def train(dev):
+    config = wandb.config
+
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=config['learning_rate'])
@@ -75,14 +77,14 @@ def train(dev):
         train_dataloader,
         validate_dataloader,
         test_dataloader,
-    ) = init_dataloaders(wandb.config)
+    ) = init_dataloaders(config)
 
-    anneal_period = wandb.config["epochs"] * len(train_dataloader)
+    anneal_period = config["epochs"] * len(train_dataloader)
     scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=config['learning_rate'] / 10)
 
     best_val_loss = 1e10
     global_step = 0
-    for epoch in range(wandb.config["epochs"]):
+    for epoch in range(config["epochs"]):
         for i, (imgs, labels) in enumerate(train_dataloader, 1):
             global_step += 1
             imgs = imgs.to(dev)
