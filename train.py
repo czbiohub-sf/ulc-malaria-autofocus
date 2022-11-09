@@ -42,11 +42,9 @@ def init_dataloaders(config):
         BATCH_SIZE,
     )
 
-    test_dataloader, validate_dataloader, train_dataloader = (
-        dataloaders["test"],
-        dataloaders["val"],
-        dataloaders["test"],
-    )
+    test_dataloader = dataloaders["test"]
+    validate_dataloader = dataloaders["val"]
+    train_dataloader = dataloaders["train"]
 
     wandb.config.update(
         {

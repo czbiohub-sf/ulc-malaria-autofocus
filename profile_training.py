@@ -31,19 +31,12 @@ class MockedModel(AutoFocus):
 def profile_run(
     dev,
     train_dataloader,
-    validate_dataloader,
-    test_dataloader,
     img_size,
 ):
     print("dev is ", dev)
     net = MockedModel().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
-
-    print("warming up")
-    for epoch in range(WARMUP):
-        outputs = net(torch.randn(1, 1, *img_size, device=dev))
-    net.zero_grad()
 
     print("here we goooooo!")
     with profile(
@@ -52,20 +45,17 @@ def profile_run(
         profile_memory=True,
     ) as prof:
         for i, (imgs, labels) in enumerate(train_dataloader):
-            optimizer.zero_grad(set_to_none=True)
-            print("is cuda available?", torch.cuda.is_available())
-            print("in loop dev is", dev)
-            print(imgs.device)
-            imgs.cuda()
-            labels.cuda()
-            print(imgs.device)
+            imgs = imgs.to(dev)
+            labels = labels.to(dev)
 
-            outputs = net(imgs)
-            loss = L2(outputs, labels)
+            optimizer.zero_grad(set_to_none=True)
+
+            outputs = net(imgs).reshape(-1)
+            loss = L2(outputs, labels.float())
             loss.backward()
             optimizer.step()
 
-            if i == 5:
+            if i > 50:
                 break
 
         return prof
@@ -74,11 +64,17 @@ def profile_run(
 if __name__ == "__main__":
     set_start_method("spawn")
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = "cuda"#torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    test_dataloader, validate_dataloader, train_dataloader = get_dataloader(
+    dataloaders = get_dataloader(
         sys.argv[1],
         BATCH_SIZE,
+    )
+
+    test_dataloader, validate_dataloader, train_dataloader = (
+        dataloaders["test"],
+        dataloaders["val"],
+        dataloaders["test"],
     )
 
     # https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html#enable-cudnn-auto-tuner
@@ -92,8 +88,6 @@ if __name__ == "__main__":
     prof = profile_run(
         device,
         train_dataloader,
-        validate_dataloader,
-        test_dataloader,
         resize_target_size,
     )
 

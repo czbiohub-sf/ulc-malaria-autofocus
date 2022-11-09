@@ -1,6 +1,7 @@
 import os
 import yaml
 import torch
+import tarfile
 
 from torch import nn
 
@@ -79,7 +80,22 @@ def load_dataset_description(
         # a nested dict structure describing each dataset description.
         # see README.md for more detail
 
-        if "dataset_paths" in yaml_data:
+        if "dataset_paths" in yaml_data and "dataset_zip_paths" in yaml_data:
+            dataset_paths_dict = yaml_data["dataset_paths"]
+            dataset_zip_paths_dict = yaml_data["dataset_zip_paths"]
+
+            if dataset_paths_dict.keys() != dataset_zip_paths_dict.keys():
+                raise ValueError("keys of dataset descriptor file 'dataset_paths' and 'dataset_zip_paths' must be the same")
+
+            print("transfering data")
+            for k in dataset_zip_paths_dict:
+                with tarfile.open(dataset_zip_paths_dict[k]) as tar:
+                    tar.extractall(path=dataset_paths_dict[k])
+
+            # hack! i should extract out the "training_data" directory if that exists.
+            dataset_paths = [Path(d) / "training_data" for d in yaml_data["dataset_paths"].values()]
+            print("transferred")
+        elif "dataset_paths" in yaml_data:
             dataset_paths = [Path(d) for d in yaml_data["dataset_paths"].values()]
         else:
             raise ValueError("dataset description file missing dataset_paths")
@@ -110,11 +126,6 @@ def read_grayscale(img_path):
         raise RuntimeError(f"file {img_path} threw: {e}")
 
 
-class RescaleToUnit(nn.Module):
-    def forward(self, x):
-        return x.div(255)
-
-
 def get_datasets(
     dataset_description_file: str,
     batch_size: int,
@@ -131,7 +142,7 @@ def get_datasets(
         [RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)] if training else []
     )
     # scale to [0,1]?
-    transforms = Compose([Resize([300, 400]), RescaleToUnit(), *augmentations])
+    transforms = Compose([Resize([300, 400]), *augmentations])
 
     full_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
         ImageFolderWithLabels(

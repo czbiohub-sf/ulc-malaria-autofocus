@@ -47,8 +47,7 @@ def load_zarr_data(path_to_zarr: str):
         yield img
 
 
-def load_model_for_inference(path_to_pth: str):
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+def load_model_for_inference(path_to_pth: str, device: torch.device):
     model_save = torch.load(path_to_pth, map_location=device)
 
     net = AutoFocus()
@@ -62,6 +61,7 @@ def load_model_for_inference(path_to_pth: str):
 if __name__ == "__main__":
     parser = infer_parser()
     args = parser.parse_args()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     no_imgs = args.images is None
     no_zarr = args.zarr is None
@@ -69,12 +69,12 @@ if __name__ == "__main__":
         print("you must supply a value for only one of --images or --zarr")
         sys.exit(1)
 
-    model = load_model_for_inference(args.pth_path)
+    model = load_model_for_inference(args.pth_path, device)
     image_loader = (
         load_image_data(args.images) if no_zarr else load_zarr_data(args.zarr)
     )
 
     with torch.no_grad():
         for image in image_loader:
-            res = model(image)
+            res = model(image.to(device))
             print(res.item())

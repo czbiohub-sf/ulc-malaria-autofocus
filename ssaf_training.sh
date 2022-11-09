@@ -23,3 +23,5 @@ nvidia-smi
 wandb online
 conda run "$@"
 wandb offline
+
+rm -rf /tmp/training_data
