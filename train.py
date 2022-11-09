@@ -68,7 +68,7 @@ def init_dataloaders(config):
 def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
-    optimizer = AdamW(net.parameters(), lr=ADAM_LR)
+    optimizer = AdamW(net.parameters(), lr=config['learning_rate'])
 
     (
         model_save_dir,
@@ -78,8 +78,9 @@ def train(dev):
     ) = init_dataloaders(wandb.config)
 
     anneal_period = wandb.config["epochs"] * len(train_dataloader)
-    scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=3e-5)
+    scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=config['learning_rate'] / 10)
 
+    best_val_loss = 1e10
     global_step = 0
     for epoch in range(wandb.config["epochs"]):
         for i, (imgs, labels) in enumerate(train_dataloader, 1):
@@ -121,9 +122,13 @@ def train(dev):
         wandb.log(
             {"val_loss": val_loss / len(validate_dataloader)},
         )
-        checkpoint_model(
-            net, epoch, optimizer, model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"
-        )
+
+        if val_loss < best_val_loss:
+            checkpoint_model(net, epoch, optimizer, model_save_dir / f"best.pth")
+            best_val_loss = val_loss
+
+        checkpoint_model(net, epoch, optimizer, model_save_dir / f"latest.pth")
+
         net.train()
 
     print("done training")
@@ -143,9 +148,6 @@ def train(dev):
         {
             "test_loss": test_loss / len(test_dataloader),
         },
-    )
-    checkpoint_model(
-        net, epoch, optimizer, model_save_dir / f"{wandb.run.name}_{epoch}_{i}.pth"
     )
 
 

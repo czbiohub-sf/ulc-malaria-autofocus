@@ -85,7 +85,9 @@ def load_dataset_description(
             dataset_zip_paths_dict = yaml_data["dataset_zip_paths"]
 
             if dataset_paths_dict.keys() != dataset_zip_paths_dict.keys():
-                raise ValueError("keys of dataset descriptor file 'dataset_paths' and 'dataset_zip_paths' must be the same")
+                raise ValueError(
+                    "keys of dataset descriptor file 'dataset_paths' and 'dataset_zip_paths' must be the same"
+                )
 
             print("transfering data")
             for k in dataset_zip_paths_dict:
@@ -93,7 +95,9 @@ def load_dataset_description(
                     tar.extractall(path=dataset_paths_dict[k])
 
             # hack! i should extract out the "training_data" directory if that exists.
-            dataset_paths = [Path(d) / "training_data" for d in yaml_data["dataset_paths"].values()]
+            dataset_paths = [
+                Path(d) / "training_data" for d in yaml_data["dataset_paths"].values()
+            ]
             print("transferred")
         elif "dataset_paths" in yaml_data:
             dataset_paths = [Path(d) for d in yaml_data["dataset_paths"].values()]
@@ -207,5 +211,6 @@ def get_dataloader(
             shuffle=True,
             drop_last=True,
             generator=torch.Generator().manual_seed(101010),
+            pin_memory=True,
         )
     return d

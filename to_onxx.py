@@ -72,7 +72,9 @@ if __name__ == "__main__":
     )
 
     # export to IR
-    subprocess.run(["mo", "--input_model", onnx_filename, "--output_dir", str(onnx_path.parent)])
+    subprocess.run(
+        ["mo", "--input_model", onnx_filename, "--output_dir", str(onnx_path.parent)]
+    )
 
     print(
         f"\nexported to {onnx_filename}, {onnx_filename.replace('onnx', 'xml')}, {onnx_filename.replace('onnx', 'bin')}"
