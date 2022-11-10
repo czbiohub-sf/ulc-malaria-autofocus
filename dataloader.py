@@ -16,7 +16,14 @@ from torchvision.transforms import (
 )
 
 from pathlib import Path
+from functools import partial
 from typing import List, Dict, Union, Tuple, Optional, Callable
+
+
+
+def _dict_get_and_cast_to_int(dct, idx):
+    "some weird picklability / multiprocessing thing with num_workers > 0 did this"
+    return int(dct[idx])
 
 
 class ImageFolderWithLabels(datasets.ImageFolder):
@@ -31,18 +38,10 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         super().__init__(*args, **kwargs)
 
         self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
+        self.target_transform = partial(_dict_get_and_cast_to_int, self.idx_to_class)
 
         # for `sample_from_class`
         self.class_to_samples: Dict[int, List[str]] = dict()
-        for el, label in self.imgs:
-            el_class = int(self.idx_to_class[label])
-            if el_class in self.class_to_samples:
-                self.class_to_samples[el_class].append(el)
-            else:
-                self.class_to_samples[el_class] = [el]
-
-    def target_transform(self, idx):
-        return int(self.idx_to_class[idx])
 
     def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
         "Adapted from torchvision.datasets.folder.py"
@@ -56,7 +55,14 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         return classes, class_to_idx
 
     def sample_from_class(self, clss, count):
-        # TODO: probably a better way to do this
+        if len(self.class_to_samples) == 0:
+            for el, label in self.imgs:
+                el_class = int(self.idx_to_class[label])
+                if el_class in self.class_to_samples:
+                    self.class_to_samples[el_class].append(el)
+                else:
+                    self.class_to_samples[el_class] = [el]
+
         sample_set = self.class_to_samples[clss]
         idxs = torch.randint(len(sample_set), [count, 1])
         samples = []
