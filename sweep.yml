@@ -1,0 +1,20 @@
+command:
+  - conda
+  - run
+  - python3
+  - ${program}
+  - ../avt_and_basler.yml
+program: train.py
+method: random
+metric:
+  goal: minimize
+  name: val loss
+parameters:
+  learning_rate:
+    distribution: log_uniform_values
+    min: 3e-6
+    max: 3e-2
+  batch_size:
+    distribution: q_log_uniform_values
+    min: 16
+    max: 512
