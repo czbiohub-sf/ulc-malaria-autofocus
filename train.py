@@ -20,11 +20,6 @@ from typing import List
 torch.backends.cuda.matmul.allow_tf32 = True
 
 
-EPOCHS = 128
-ADAM_LR = 3e-4
-BATCH_SIZE = 256
-
-
 def checkpoint_model(model, epoch, optimizer, name):
     torch.save(
         {
@@ -39,7 +34,7 @@ def checkpoint_model(model, epoch, optimizer, name):
 def init_dataloaders(config):
     dataloaders = get_dataloader(
         config["dataset_descriptor_file"],
-        BATCH_SIZE,
+        config["batch_size"],
     )
 
     test_dataloader = dataloaders["test"]
@@ -155,6 +150,10 @@ def train(dev):
 
 def do_training(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    EPOCHS = 128
+    ADAM_LR = 0.00007564058571387123
+    BATCH_SIZE = 32
 
     wandb.init(
         "autofocus",

@@ -32,19 +32,17 @@ class ImageFolderWithLabels(datasets.ImageFolder):
 
         self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
 
-        def target_transform(idx):
-            return int(self.idx_to_class[idx])
-
-        self.target_transform = target_transform
-
         # for `sample_from_class`
         self.class_to_samples: Dict[int, List[str]] = dict()
         for el, label in self.imgs:
-            el_class = target_transform(label)
+            el_class = int(self.idx_to_class[label])
             if el_class in self.class_to_samples:
                 self.class_to_samples[el_class].append(el)
             else:
                 self.class_to_samples[el_class] = [el]
+
+    def target_transform(self, idx):
+        return int(self.idx_to_class[idx])
 
     def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
         "Adapted from torchvision.datasets.folder.py"
@@ -108,9 +106,9 @@ def load_dataset_description(
             k: float(v) for k, v in yaml_data["dataset_split_fractions"].items()
         }
 
-        if not sum(split_fractions.values()) == 1:
+        if abs(sum(split_fractions.values()) - 1) > 0.001:
             raise ValueError(
-                f"invalid split fractions for dataset: split fractions must add to 1, got {split_fractions}"
+                f"invalid split fractions for dataset: split fractions must add to 1, got {split_fractions} -> {sum(split_fractions.values())}"
             )
 
         check_dataset_paths(dataset_paths)
@@ -212,5 +210,6 @@ def get_dataloader(
             drop_last=True,
             generator=torch.Generator().manual_seed(101010),
             pin_memory=True,
+            num_workers=1
         )
     return d
