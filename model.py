@@ -28,7 +28,6 @@ class AutoFocus(nn.Module):
         )
 
     def forward(self, x: torch.Tensor):
-        x = x.float()
         x = self.conv_block_1(x)
         x = self.conv_block_2(x)
         x = self.conv_block_3(x)

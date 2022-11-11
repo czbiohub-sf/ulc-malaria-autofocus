@@ -66,6 +66,7 @@ def train(dev):
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=config["learning_rate"])
+    scaler = torch.cuda.amp.GradScaler()
 
     (
         model_save_dir,
@@ -89,10 +90,12 @@ def train(dev):
 
             optimizer.zero_grad(set_to_none=True)
 
-            outputs = net(imgs).reshape(-1)
-            loss = L2(outputs, labels.float())
-            loss.backward()
-            optimizer.step()
+            with torch.autocast(device_type='cuda', dtype=torch.float16):
+                outputs = net(imgs).reshape(-1)
+                loss = L2(outputs, labels)
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             scheduler.step()
 
             wandb.log(
@@ -113,10 +116,10 @@ def train(dev):
             imgs = imgs.to(dev)
             labels = labels.to(dev)
 
-            with torch.no_grad():
+            with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.float16):
                 outputs = net(imgs).reshape(-1)
-                loss = L2(outputs, labels.float())
-                val_loss += loss.item()
+                loss = L2(outputs, labels)
+            val_loss += loss.item()
 
         wandb.log(
             {"val_loss": val_loss / len(validate_dataloader)},
@@ -138,10 +141,10 @@ def train(dev):
         imgs = imgs.to(dev)
         labels = labels.to(dev)
 
-        with torch.no_grad():
+        with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.float16):
             outputs = net(imgs).reshape(-1)
-            loss = L2(outputs, labels.half())
-            test_loss += loss.item()
+            loss = L2(outputs, labels)
+        test_loss += loss.item()
 
     wandb.log(
         {
