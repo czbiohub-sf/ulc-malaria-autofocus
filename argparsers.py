@@ -1,3 +1,4 @@
+import sys
 import argparse
 
 from typing import Union
@@ -18,6 +19,18 @@ def infer_parser(parser=None):
     )
     parser.add_argument("--images", type=str, help="path to image or images")
     parser.add_argument("--zarr", type=str, help="path to zarr store")
+    parser.add_argument(
+        "--output",
+        type=str,
+        help="place to write data to",
+        default=None,
+    )
+    parser.add_argument(
+        "--allan-dev",
+        help="calculate allan deviation",
+        action=boolean_action,
+        default=False,
+    )
 
     return parser
 

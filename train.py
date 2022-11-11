@@ -65,7 +65,7 @@ def train(dev):
 
     net = AutoFocus().to(dev)
     L2 = nn.MSELoss().to(dev)
-    optimizer = AdamW(net.parameters(), lr=config['learning_rate'])
+    optimizer = AdamW(net.parameters(), lr=config["learning_rate"])
 
     (
         model_save_dir,
@@ -75,7 +75,9 @@ def train(dev):
     ) = init_dataloaders(config)
 
     anneal_period = config["epochs"] * len(train_dataloader)
-    scheduler = CosineAnnealingLR(optimizer, T_max=anneal_period, eta_min=config['learning_rate'] / 10)
+    scheduler = CosineAnnealingLR(
+        optimizer, T_max=anneal_period, eta_min=config["learning_rate"] / 10
+    )
 
     best_val_loss = 1e10
     global_step = 0

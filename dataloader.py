@@ -20,7 +20,6 @@ from functools import partial
 from typing import List, Dict, Union, Tuple, Optional, Callable
 
 
-
 def _dict_get_and_cast_to_int(dct, idx):
     "some weird picklability / multiprocessing thing with num_workers > 0 did this"
     return int(dct[idx])
@@ -216,6 +215,6 @@ def get_dataloader(
             drop_last=True,
             generator=torch.Generator().manual_seed(101010),
             pin_memory=True,
-            num_workers=1
+            num_workers=1,
         )
     return d
