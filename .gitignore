@@ -17,3 +17,4 @@ test_set_png
 res.pkl
 
 2022-07-21-161530_SSAF_start_at_peak_focus.zip
+infer_on_steps.sh
