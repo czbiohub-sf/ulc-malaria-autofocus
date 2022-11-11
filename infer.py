@@ -41,10 +41,18 @@ def load_model_for_inference(path_to_pth: str, device: torch.device):
     return net
 
 
-def infer(model, image_loader):
+def infer(model, image_loader, half=False):
+    if half:
+        model.half()
+
     for image in image_loader:
         with torch.no_grad():
-            res = model(image.to(device))
+            if half:
+                image.to(device, dtype=torch.float16)
+            else:
+                image.to(device)
+
+            res = model(image)
             yield res.item()
 
 
@@ -133,6 +141,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     model = load_model_for_inference(args.pth_path, device)
+    model.half()
     image_loader = (
         ImageLoader.load_image_data(args.images)
         if no_zarr
