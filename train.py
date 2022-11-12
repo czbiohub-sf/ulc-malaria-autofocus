@@ -63,7 +63,7 @@ def init_dataloaders(config):
 def train(dev):
     config = wandb.config
 
-    net = AutoFocus().to(dev)
+    net = AutoFocus().to(dev).half()
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=config["learning_rate"])
     scaler = torch.cuda.amp.GradScaler()
@@ -85,8 +85,8 @@ def train(dev):
     for epoch in range(config["epochs"]):
         for i, (imgs, labels) in enumerate(train_dataloader, 1):
             global_step += 1
-            imgs = imgs.to(dev)
-            labels = labels.to(dev)
+            imgs = imgs.to(dev, dtype=torch.float16)
+            labels = labels.to(dev, dtype=torch.float16)
 
             optimizer.zero_grad(set_to_none=True)
 
@@ -113,8 +113,8 @@ def train(dev):
         net.eval()
         for data in validate_dataloader:
             imgs, labels = data
-            imgs = imgs.to(dev)
-            labels = labels.to(dev)
+            imgs = imgs.to(dev, dtype=torch.float16)
+            labels = labels.to(dev, dtype=torch.float16)
 
             with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.float16):
                 outputs = net(imgs).reshape(-1)
@@ -138,8 +138,8 @@ def train(dev):
     test_loss = 0.0
     for data in test_dataloader:
         imgs, labels = data
-        imgs = imgs.to(dev)
-        labels = labels.to(dev)
+        imgs = imgs.to(dev, dtype=torch.float16)
+        labels = labels.to(dev, dtype=torch.float16)
 
         with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.float16):
             outputs = net(imgs).reshape(-1)
