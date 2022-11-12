@@ -31,6 +31,12 @@ def infer_parser(parser=None):
         action=boolean_action,
         default=False,
     )
+    parser.add_argument(
+        "--half",
+        help="calculate at half precision (float16)",
+        action=boolean_action,
+        default=False,
+    )
 
     return parser
 

@@ -63,11 +63,6 @@ def init_dataloaders(config):
 def train(dev):
     config = wandb.config
 
-    net = AutoFocus().to(dev).half()
-    L2 = nn.MSELoss().to(dev)
-    optimizer = AdamW(net.parameters(), lr=config["learning_rate"])
-    scaler = torch.cuda.amp.GradScaler()
-
     (
         model_save_dir,
         train_dataloader,
@@ -75,8 +70,12 @@ def train(dev):
         test_dataloader,
     ) = init_dataloaders(config)
 
+    net = AutoFocus().to(dev)
+    L2 = nn.MSELoss().to(dev)
+    optimizer = AdamW(net.parameters(), lr=config["learning_rate"])
+    scaler = torch.cuda.amp.GradScaler()
     anneal_period = config["epochs"] * len(train_dataloader)
-    scheduler = CosineAnnealingLR(
+    lr_scheduler = CosineAnnealingLR(
         optimizer, T_max=anneal_period, eta_min=config["learning_rate"] / 10
     )
 
@@ -90,19 +89,25 @@ def train(dev):
 
             optimizer.zero_grad(set_to_none=True)
 
-            with torch.autocast(device_type='cuda', dtype=torch.float16):
+            with torch.autocast(device_type="cuda", dtype=torch.float16):
                 outputs = net(imgs).reshape(-1)
                 loss = L2(outputs, labels)
+
             scaler.scale(loss).backward()
             scaler.step(optimizer)
+
+            scale = scaler.get_scale()
             scaler.update()
-            scheduler.step()
+
+            skip_lr_sched = scale > scaler.get_scale()
+            if not skip_lr_sched:
+                lr_scheduler.step()
 
             wandb.log(
                 {
                     "train_loss": loss.item(),
                     "epoch": epoch,
-                    "LR": scheduler.get_last_lr()[0],
+                    "LR": lr_scheduler.get_last_lr()[0],
                 },
                 commit=False,
                 step=global_step,
@@ -116,7 +121,9 @@ def train(dev):
             imgs = imgs.to(dev, dtype=torch.float16)
             labels = labels.to(dev, dtype=torch.float16)
 
-            with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.float16):
+            with torch.no_grad(), torch.autocast(
+                device_type="cuda", dtype=torch.float16
+            ):
                 outputs = net(imgs).reshape(-1)
                 loss = L2(outputs, labels)
             val_loss += loss.item()
@@ -141,7 +148,7 @@ def train(dev):
         imgs = imgs.to(dev, dtype=torch.float16)
         labels = labels.to(dev, dtype=torch.float16)
 
-        with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.float16):
+        with torch.no_grad(), torch.autocast(device_type="cuda", dtype=torch.float16):
             outputs = net(imgs).reshape(-1)
             loss = L2(outputs, labels)
         test_loss += loss.item()

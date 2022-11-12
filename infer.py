@@ -48,22 +48,22 @@ def infer(model, image_loader, half=False):
     for image in image_loader:
         with torch.no_grad():
             if half:
-                image.to(device, dtype=torch.float16)
+                image = image.to(device, dtype=torch.float16)
             else:
-                image.to(device)
+                image = image.to(device, dtype=torch.float32)
 
             res = model(image)
             yield res.item()
 
 
-def calculate_allan_dev(model, image_loader):
-    ds = at.Dataset(data=[v for v in infer(model, tqdm(image_loader))])
+def calculate_allan_dev(model, image_loader, half=False):
+    ds = at.Dataset(data=[v for v in infer(model, tqdm(image_loader), half=half)])
     res = ds.compute("oadev")
     taus = res["taus"]
     stat = res["stat"]
 
     with open("allan_dev_calc.txt", "w") as f:
-        f.write("\n".join(f"{t},{s}" for t,s in zip(res["taus"], res["stat"])))
+        f.write("\n".join(f"{t},{s}" for t, s in zip(res["taus"], res["stat"])))
 
     pl = at.Plot()
     pl.plot(ds, errorbars=True, grid=True)
@@ -141,7 +141,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     model = load_model_for_inference(args.pth_path, device)
-    model.half()
     image_loader = (
         ImageLoader.load_image_data(args.images)
         if no_zarr
@@ -151,5 +150,5 @@ if __name__ == "__main__":
     if args.allan_dev:
         calculate_allan_dev(model, image_loader)
     else:
-        for res in infer(model, image_loader):
+        for res in infer(model, image_loader, half=args.half):
             print(res)
