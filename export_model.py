@@ -41,7 +41,7 @@ if __name__ == "__main__":
     onnx_filename = str(onnx_path)
 
     # TODO CPU vs GPU vs whatever else?
-    model_save = torch.load(pth_filename, map_location=torch.device("cpu"))
+    model_save = torch.load(pth_filename, map_location=torch.device("cuda"))
 
     net = AutoFocus()
     net.load_state_dict(model_save["model_state_dict"])
@@ -59,7 +59,15 @@ if __name__ == "__main__":
     )
     torch_out = net(dummy_input)
 
-    torch.onnx.export(net, dummy_input, onnx_filename, verbose=False)
+    torch.onnx.export(
+        net,
+        dummy_input,
+        onnx_filename,
+        opset_version=15,
+        verbose=False,
+        export_params=True,
+        do_constant_folding=True,
+    )
 
     # Load the ONNX model
     model = onnx.load(onnx_filename)
@@ -68,7 +76,10 @@ if __name__ == "__main__":
     onnx.checker.check_model(model)
 
     # Compare model output from pure torch and onnx
-    EP_list = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+    EP_list = [
+        ("CUDAExecutionProvider", {'cudnn_conv_algo_search': 'EXHAUSTIVE'}),
+        "CPUExecutionProvider"
+    ]
     ort_session = onnxruntime.InferenceSession(onnx_filename, providers=EP_list)
     ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(dummy_input)}
     ort_outs = ort_session.run(None, ort_inputs)

@@ -132,7 +132,6 @@ if __name__ == "__main__":
     parser = infer_parser()
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"using {device}")
 
     no_imgs = args.images is None
     no_zarr = args.zarr is None
