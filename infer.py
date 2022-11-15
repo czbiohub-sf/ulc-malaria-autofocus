@@ -55,7 +55,7 @@ def calculate_allan_dev(model, image_loader):
     stat = res["stat"]
 
     with open("allan_dev_calc.txt", "w") as f:
-        f.write("\n".join(f"{t},{s}" for t,s in zip(res["taus"], res["stat"])))
+        f.write("\n".join(f"{t},{s}" for t, s in zip(res["taus"], res["stat"])))
 
     pl = at.Plot()
     pl.plot(ds, errorbars=True, grid=True)
