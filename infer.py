@@ -50,7 +50,7 @@ def infer(model, image_loader):
 
 def calculate_allan_dev(model, image_loader):
     ds = at.Dataset(data=[v for v in infer(model, tqdm(image_loader))])
-    res = ds.compute("oadev")
+    res = ds.compute("tdev")
     taus = res["taus"]
     stat = res["stat"]
 
