@@ -44,7 +44,7 @@ def load_model_for_inference(path_to_pth: str, device: torch.device):
 def infer(model, image_loader):
     for image in image_loader:
         with torch.no_grad():
-            res = model(image.to(device))
+            res = model(image)
             yield res.item()
 
 
@@ -96,8 +96,7 @@ class ImageLoader:
                 image = read_grayscale(img_name)
                 preprocessed = transforms(image)
                 preprocessed.unsqueeze_(dim=0)
-                preprocessed.to(device)
-                yield preprocessed
+                yield preprocessed.to(device)
 
         return cls(_iter, _num_els)
 
@@ -114,8 +113,7 @@ class ImageLoader:
                 # cheap trick
                 img = transform(data[i][:]) * 255
                 img.unsqueeze_(dim=0)
-                img.to(device)
-                yield img
+                yield img.to(device)
 
         return cls(_iter, _num_els)
 

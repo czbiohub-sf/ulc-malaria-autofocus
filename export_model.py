@@ -81,7 +81,15 @@ if __name__ == "__main__":
 
     # export to IR
     subprocess.run(
-        ["mo", "--input_model", onnx_filename, "--output_dir", str(onnx_path.parent), "--data_type", "FP16"]
+        [
+            "mo",
+            "--input_model",
+            onnx_filename,
+            "--output_dir",
+            str(onnx_path.parent),
+            "--data_type",
+            "FP16",
+        ]
     )
 
     print(
