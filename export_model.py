@@ -50,7 +50,14 @@ if __name__ == "__main__":
     dummy_input = torch.randn(1, 1, 300, 400, requires_grad=False)
     torch_out = net(dummy_input)
 
-    torch.onnx.export(net, dummy_input, onnx_filename, verbose=False)
+    torch.onnx.export(
+        net,
+        dummy_input,
+        onnx_filename,
+        verbose=False,
+        export_params=True,
+        do_constant_folding=True,
+    )
 
     # Load the ONNX model
     model = onnx.load(onnx_filename)
@@ -59,7 +66,8 @@ if __name__ == "__main__":
     onnx.checker.check_model(model)
 
     # Compare model output from pure torch and onnx
-    ort_session = onnxruntime.InferenceSession(onnx_filename)
+    EP_list = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+    ort_session = onnxruntime.InferenceSession(onnx_filename, providers=EP_list)
     ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(dummy_input)}
     ort_outs = ort_session.run(None, ort_inputs)
 
@@ -73,7 +81,7 @@ if __name__ == "__main__":
 
     # export to IR
     subprocess.run(
-        ["mo", "--input_model", onnx_filename, "--output_dir", str(onnx_path.parent)]
+        ["mo", "--input_model", onnx_filename, "--output_dir", str(onnx_path.parent), "--data_type", "FP16"]
     )
 
     print(
