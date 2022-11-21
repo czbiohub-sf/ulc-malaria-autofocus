@@ -1,8 +1,6 @@
 import sys
 import argparse
 
-from typing import Union
-
 
 try:
     boolean_action = argparse.BooleanOptionalAction  # type: ignore
