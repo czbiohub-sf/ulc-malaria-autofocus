@@ -150,7 +150,7 @@ def get_datasets(
         [
             RandomHorizontalFlip(0.5),
             RandomVerticalFlip(0.5),
-            ColorJitter(brightness=(0.6, 1.2)),
+            ColorJitter(brightness=(0.8, 1.1)),
         ]
         if training
         else []
