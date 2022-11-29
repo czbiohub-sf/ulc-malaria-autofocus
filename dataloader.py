@@ -214,6 +214,7 @@ def get_dataloader(
             drop_last=True,
             generator=torch.Generator().manual_seed(101010),
             pin_memory=True,
+            shuffle=True,
             num_workers=len(os.sched_getaffinity(0)),
         )
     return d
