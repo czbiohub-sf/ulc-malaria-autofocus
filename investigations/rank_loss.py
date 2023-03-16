@@ -2,16 +2,14 @@ import pickle as pkl
 
 import torch
 import torch.nn as nn
-import numpy as np
 
 from torchvision.io import read_image
 from torch.utils.data import DataLoader
 from torchvision.transforms import Resize
 
 from nn_analysis import load_model_for_inference
-from dataloader import ImageFolderWithLabels, get_dataset, get_dataloader
+from dataloader import ImageFolderWithLabels
 
-from typing import List
 from collections import namedtuple
 
 

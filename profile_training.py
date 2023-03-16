@@ -13,9 +13,6 @@ from torch.profiler import profile, ProfilerActivity, record_function
 from model import AutoFocus
 from dataloader import get_dataloader
 
-from pathlib import Path
-from copy import deepcopy
-from typing import List
 
 WARMUP = 2
 ADAM_LR = 3e-4

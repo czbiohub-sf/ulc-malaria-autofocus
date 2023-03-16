@@ -7,7 +7,6 @@ import onnx
 import onnxruntime
 
 import torch
-import torchvision
 
 import numpy as np
 

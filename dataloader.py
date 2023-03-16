@@ -3,7 +3,6 @@ import yaml
 import torch
 import tarfile
 
-from torch import nn
 
 from torchvision import datasets
 from torchvision.io import read_image, ImageReadMode
@@ -17,7 +16,7 @@ from torchvision.transforms import (
 
 from pathlib import Path
 from functools import partial
-from typing import List, Dict, Union, Tuple, Optional, Callable
+from typing import List, Dict, Union, Tuple, Optional
 
 
 def _dict_get_and_cast_to_int(dct, idx):
@@ -123,7 +122,7 @@ def load_dataset_description(
 def check_dataset_paths(dataset_paths: List[Path]):
     for dataset_desc in dataset_paths:
         if not (dataset_desc.is_dir()):
-            raise FileNotFoundError(f"dataset not found")
+            raise FileNotFoundError("dataset not found")
 
 
 def read_grayscale(img_path):

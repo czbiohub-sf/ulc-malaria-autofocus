@@ -1,13 +1,12 @@
 #! /usr/bin/env python3
 
-import sys
 
 import wandb
 import torch
 
 from torch import nn
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import LinearLR, SequentialLR, CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from model import AutoFocus
 from argparsers import train_parser
@@ -15,7 +14,6 @@ from dataloader import get_dataloader
 
 from pathlib import Path
 from copy import deepcopy
-from typing import List
 
 torch.backends.cuda.matmul.allow_tf32 = True
 
@@ -123,10 +121,10 @@ def train(dev):
         )
 
         if val_loss < best_val_loss:
-            checkpoint_model(net, epoch, optimizer, model_save_dir / f"best.pth")
+            checkpoint_model(net, epoch, optimizer, model_save_dir / "best.pth")
             best_val_loss = val_loss
 
-        checkpoint_model(net, epoch, optimizer, model_save_dir / f"latest.pth")
+        checkpoint_model(net, epoch, optimizer, model_save_dir / "latest.pth")
 
         net.train()
 

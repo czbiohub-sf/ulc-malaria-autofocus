@@ -4,14 +4,12 @@ import sys
 import zarr
 
 import torch
-import numpy as np
-import matplotlib.pyplot as plt
 import allantools as at
 
 from pathlib import Path
 from model import AutoFocus
 from argparsers import infer_parser
-from dataloader import get_datasets, read_grayscale
+from dataloader import read_grayscale
 
 from torchvision.transforms import Resize, Compose, ToTensor
 
@@ -51,8 +49,8 @@ def infer(model, image_loader):
 def calculate_allan_dev(model, image_loader):
     ds = at.Dataset(data=[v for v in infer(model, tqdm(image_loader))])
     res = ds.compute("tdev")
-    taus = res["taus"]
-    stat = res["stat"]
+    res["taus"]
+    res["stat"]
 
     with open("allan_dev_calc.txt", "w") as f:
         f.write("\n".join(f"{t},{s}" for t, s in zip(res["taus"], res["stat"])))
