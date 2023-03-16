@@ -106,12 +106,12 @@ class ImageLoader:
         data = zarr.open(path_to_zarr)
         transform = Compose([ToTensor(), Resize([300, 400])])
 
-        _num_els = len(data)
+        _num_els = data.initialized
 
         def _iter():
-            for i in range(len(data)):
+            for i in range(_num_els):
                 # cheap trick
-                img = transform(data[i][:]) * 255
+                img = transform(data[:, :, i]) * 255
                 img.unsqueeze_(dim=0)
                 yield img.to(device)
 
