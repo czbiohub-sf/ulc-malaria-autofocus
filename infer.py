@@ -145,4 +145,5 @@ if __name__ == "__main__":
             print(res)
     else:
         with open(args.output, 'w') as file:
-            file.write(infer(model, image_loader))
+            for res in infer(model, image_loader):
+                file.write(res)
