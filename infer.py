@@ -124,6 +124,7 @@ if __name__ == "__main__":
 
     no_imgs = args.images is None
     no_zarr = args.zarr is None
+    no_output = args.output is None
     if (no_imgs and no_zarr) or (not no_imgs and not no_zarr):
         print("you must supply a value for only one of --images or --zarr")
         sys.exit(1)
@@ -137,6 +138,10 @@ if __name__ == "__main__":
 
     if args.allan_dev:
         calculate_allan_dev(model, image_loader)
-    else:
+    elif no_output:
         for res in infer(model, image_loader):
             print(res)
+    else:
+        with open(args.output, 'w') as file:
+            for res in infer(model, image_loader):
+                file.write(f"{res}\n")
