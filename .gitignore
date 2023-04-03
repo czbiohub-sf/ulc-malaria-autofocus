@@ -19,4 +19,7 @@ res.pkl
 2022-07-21-161530_SSAF_start_at_peak_focus.zip
 infer_on_steps.sh
 
+slurm-outputs/
+trained_models/
+
 allan_dev_calc.txt
