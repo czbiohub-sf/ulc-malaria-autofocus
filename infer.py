@@ -103,7 +103,7 @@ class ImageLoader:
     @classmethod
     def load_zarr_data(cls, path_to_zarr: str):
         device = choose_device()
-        data = zarr.open(path_to_zarr)
+        data = zarr.open(path_to_zarr, mode='r')
         transform = Compose([ToTensor(), Resize([300, 400])])
 
         _num_els = data.initialized
