@@ -11,7 +11,7 @@ import torch
 import numpy as np
 
 from pathlib import Path
-from model import AutoFocus
+from autofocus.model import AutoFocus
 
 
 """

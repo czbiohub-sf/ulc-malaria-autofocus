@@ -7,11 +7,12 @@ import torch
 import allantools as at
 
 from pathlib import Path
-from model import AutoFocus
-from argparsers import infer_parser
-from dataloader import read_grayscale
 
 from torchvision.transforms import Resize, Compose, ToTensor
+
+from autofocus.model import AutoFocus
+from autofocus.argparsers import infer_parser
+from autofocus.dataloader import read_grayscale
 
 
 def _tqdm(iterable, **kwargs):
@@ -101,7 +102,7 @@ class ImageLoader:
     @classmethod
     def load_zarr_data(cls, path_to_zarr: str):
         device = choose_device()
-        data = zarr.open(path_to_zarr, mode='r')
+        data = zarr.open(path_to_zarr, mode="r")
         transform = Compose([ToTensor(), Resize([300, 400])])
 
         _num_els = data.initialized
@@ -142,6 +143,6 @@ if __name__ == "__main__":
         for res in infer(model, image_loader):
             print(res)
     else:
-        with open(args.output, 'w') as file:
+        with open(args.output, "w") as file:
             for res in infer(model, image_loader):
                 file.write(f"{res}\n")

@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from infer import choose_device
+from autofocus.infer import choose_device
 
 
 def get_confusion_data(net, dataset, sample_size=100):
@@ -42,7 +42,6 @@ def get_allan_deviation(data):
 
     # Loop through each downsampling interval
     for i in range(nlog2):
-
         # subs are indices into the raw data. All raw data sharing the same
         # subs value will be averaged together.
         subs = np.ceil((n_bins[i] / n) * ints)

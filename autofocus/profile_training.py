@@ -10,8 +10,8 @@ from torch.optim import AdamW
 from torch.multiprocessing import set_start_method
 from torch.profiler import profile, ProfilerActivity, record_function
 
-from model import AutoFocus
-from dataloader import get_dataloader
+from autofocus.model import AutoFocus
+from autofocus.dataloader import get_dataloader
 
 
 WARMUP = 2
@@ -19,10 +19,13 @@ ADAM_LR = 3e-4
 BATCH_SIZE = 32
 
 
-class MockedModel(AutoFocus):
+class MockedModel(nn.Module):
+    def __init__(self):
+        self.model = AutoFocus()
+
     def forward(self, *args, **kwargs):
         with record_function("MODEL FORWARD"):
-            return super().forward(*args, **kwargs)
+            return self.model(*args, **kwargs)
 
 
 def profile_run(

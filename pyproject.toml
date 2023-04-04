@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autofocus"
+dynamic = ["version"]
+authors = [
+  {name = "Axel Jacobsen", email = "axel.jacobsen@czbiohub.org"}
+]
+description = "autofocus model for the ULC Malaria Scope"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["PyTorch", "Deep Learning", "Autofocus"]
+license = {text = "BSD-3-Clause"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "torch",
+    "torchvision",
+]
+
+[tool.setuptools]
+packages = ["autofocus"]

@@ -8,9 +8,9 @@ from torch import nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
-from model import AutoFocus
-from argparsers import train_parser
-from dataloader import get_dataloader
+from autofocus.model import AutoFocus
+from autofocus.argparsers import train_parser
+from autofocus.dataloader import get_dataloader
 
 from pathlib import Path
 from copy import deepcopy
