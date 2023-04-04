@@ -1,8 +1,5 @@
 # Single-Shot Auto Focus (SSAF) for the ULC Malaria Scope
 
-## TODO
-
-- checkout [update to fp32 matrix muls - may affect A100 matmuls](https://pytorch.org/blog/pytorch-1.12-released/#changes-to-float32-matrix-multiplication-precision-on-ampere-and-later-cuda-hardware)
 
 ## Installation
 
