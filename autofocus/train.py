@@ -153,7 +153,7 @@ def do_training(args):
 
     EPOCHS = 256
     ADAM_LR = 0.00007564058571387123
-    BATCH_SIZE = 32
+    BATCH_SIZE = 256
 
     wandb.init(
         project="ulc-malaria-autofocus",
@@ -165,6 +165,7 @@ def do_training(args):
             "device": str(device),
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
+            "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),
         },
         notes=args.note,
         tags=["v0.0.2"],
