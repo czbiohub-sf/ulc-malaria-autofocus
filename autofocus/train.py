@@ -87,7 +87,7 @@ def train(dev):
 
             optimizer.zero_grad(set_to_none=True)
 
-            outputs = net(imgs).reshape(-1)
+            outputs = net(imgs).view(-1)
             loss = L2(outputs, labels.float())
             loss.backward()
             optimizer.step()

@@ -26,7 +26,9 @@ class AutoFocus(nn.Module):
                 nn.MaxPool2d(5, stride=2),
             ),
             nn.Sequential(
-                nn.Conv2d(32, 1, 3, padding=1), nn.Flatten(start_dim=1), nn.Linear(300, 1)
+                nn.Conv2d(32, 1, 3, padding=1),
+                nn.Flatten(start_dim=1),
+                nn.Linear(300, 1),
             ),
         )
 
