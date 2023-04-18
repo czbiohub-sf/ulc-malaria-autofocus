@@ -30,6 +30,7 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     Changes:
         - save the idx_to_class in the instance so the target_transform to folder name is quick
         - `sample_from_class` method that quickly gives a sample of a given class of a given size
+        - modification of how mem is stored for dataloader num_workers > 0
     """
 
     def __init__(self, *args, **kwargs):
@@ -38,8 +39,10 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
         self.target_transform = partial(_dict_get_and_cast_to_int, self.idx_to_class)
 
-        # for `sample_from_class`
-        self.class_to_samples: Dict[int, List[str]] = dict()
+        # self.samples is a list of tuples, so it won't play well w/ dataloader.num_workers > 0
+        paths, targets = zip(*self.samples)
+        self.paths = np.array(paths).astype(np.string_)
+        self.targets = torch.stack(targets)
 
     def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
         "Adapted from torchvision.datasets.folder.py"
@@ -52,23 +55,11 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
         return classes, class_to_idx
 
-    def sample_from_class(self, clss, count):
-        if len(self.class_to_samples) == 0:
-            for el, label in self.imgs:
-                el_class = int(self.idx_to_class[label])
-                if el_class in self.class_to_samples:
-                    self.class_to_samples[el_class].append(el)
-                else:
-                    self.class_to_samples[el_class] = [el]
-
-        sample_set = self.class_to_samples[clss]
-        idxs = torch.randint(len(sample_set), [count, 1])
-        samples = []
-        for idx in idxs:
-            T = self.transform(self.loader(sample_set[idx]))
-            T = torch.unsqueeze(T, 0)
-            samples.append(T)
-        return torch.cat(samples)
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor:
+        img_path = str(self.paths[index], encoding="utf-8")
+        sample = self.loader(img_path)
+        target = self.targets[index]
+        return sample, target
 
 
 def load_dataset_description(
