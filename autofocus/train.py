@@ -156,7 +156,7 @@ def do_training(args):
     BATCH_SIZE = 32
 
     wandb.init(
-        "autofocus",
+        project="ulc-malaria-autofocus",
         entity="bioengineering",
         config={
             "learning_rate": ADAM_LR,
