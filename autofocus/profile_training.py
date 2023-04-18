@@ -48,8 +48,14 @@ def profile_run(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
         with_stack=True,
         profile_memory=True,
+        schedule=torch.profiler.schedule(
+            wait=6,
+            warmup=12,
+            active=48,
+        ),
     ) as prof:
         for i, (imgs, labels) in enumerate(train_dataloader):
+            print(i)
             imgs = imgs.to(dev, dtype=torch.float)
             labels = labels.to(dev, dtype=torch.float)
 
@@ -60,8 +66,9 @@ def profile_run(
             loss.backward()
             optimizer.step()
             scheduler.step()
+            prof.step()
 
-            if i > 50:
+            if i > 66:
                 break
 
         return prof
