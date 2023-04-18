@@ -55,7 +55,7 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
         return classes, class_to_idx
 
-    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor:
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         img_path = str(self.paths[index], encoding="utf-8")
         sample = self.loader(img_path)
         target = self.targets[index]
