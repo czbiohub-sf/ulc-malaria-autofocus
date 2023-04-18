@@ -3,6 +3,7 @@ import yaml
 import torch
 import tarfile
 
+import numpy as np
 
 from torchvision import datasets
 from torchvision.io import read_image, ImageReadMode
