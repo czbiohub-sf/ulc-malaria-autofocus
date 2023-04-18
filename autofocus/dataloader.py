@@ -20,7 +20,7 @@ from functools import partial
 from typing import List, Dict, Union, Tuple, Optional
 
 
-def _dict_get_and_cast_to_int(dct, idx):
+def _dict_get_and_cast_to_int(dct: Dict[int, int], idx: int) -> int:
     "some weird picklability / multiprocessing thing with num_workers > 0 did this"
     return int(dct[idx])
 
@@ -41,11 +41,11 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         self.target_transform = partial(_dict_get_and_cast_to_int, self.idx_to_class)
 
         # self.samples is a list of tuples, so it won't play well w/ dataloader.num_workers > 0
-        paths, targets = zip(*self.samples)
+        paths, targets = map(list, zip(*self.samples))
         self.paths = np.array(paths).astype(np.string_)
-        self.targets = torch.stack(targets)
+        self.targets = torch.tensor(targets)
 
-    def find_classes(self, directory: str) -> Tuple[List[str], Dict[str, int]]:
+    def find_classes(self, directory: Path) -> Tuple[List[str], Dict[str, int]]:
         "Adapted from torchvision.datasets.folder.py"
         classes = sorted(
             entry.name for entry in os.scandir(directory) if entry.is_dir()
@@ -60,6 +60,10 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         img_path = str(self.paths[index], encoding="utf-8")
         sample = self.loader(img_path)
         target = self.targets[index]
+        if self.transform is not None:
+            sample = self.transform(sample)
+        if self.target_transform is not None:
+            target = self.target_transform(target.item())
         return sample, target
 
 
@@ -124,6 +128,10 @@ def read_grayscale(img_path):
         raise RuntimeError(f"file {img_path} threw: {e}")
 
 
+def is_valid_file(path: str) -> bool:
+    return not path.startswith(".")
+
+
 def get_datasets(
     dataset_description_file: str,
     batch_size: int,
@@ -147,6 +155,7 @@ def get_datasets(
             root=dataset_desc,
             transform=transforms,
             loader=read_grayscale,
+            is_valid_file=is_valid_file,
         )
         for dataset_desc in dataset_paths
     )
