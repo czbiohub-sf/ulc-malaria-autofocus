@@ -82,13 +82,13 @@ def train(dev):
     for epoch in range(config["epochs"]):
         for i, (imgs, labels) in enumerate(train_dataloader, 1):
             global_step += 1
-            imgs = imgs.to(dev)
-            labels = labels.to(dev)
+            imgs = imgs.to(dev, dtype=torch.float)
+            labels = labels.to(dev, dtype=torch.float)
 
             optimizer.zero_grad(set_to_none=True)
 
             outputs = net(imgs).view(-1)
-            loss = L2(outputs, labels.float())
+            loss = L2(outputs, labels)
             loss.backward()
             optimizer.step()
             scheduler.step()
@@ -108,12 +108,12 @@ def train(dev):
         net.eval()
         for data in validate_dataloader:
             imgs, labels = data
-            imgs = imgs.to(dev)
-            labels = labels.to(dev)
+            imgs = imgs.to(dev, dtype=torch.float)
+            labels = labels.to(dev, dtype=torch.float)
 
             with torch.no_grad():
-                outputs = net(imgs).reshape(-1)
-                loss = L2(outputs, labels.float())
+                outputs = net(imgs).view(-1)
+                loss = L2(outputs, labels)
                 val_loss += loss.item()
 
         wandb.log(
@@ -133,12 +133,12 @@ def train(dev):
     test_loss = 0.0
     for data in test_dataloader:
         imgs, labels = data
-        imgs = imgs.to(dev)
-        labels = labels.to(dev)
+        imgs = imgs.to(dev, dtype=torch.float)
+        labels = labels.to(dev, dtype=torch.float)
 
         with torch.no_grad():
-            outputs = net(imgs).reshape(-1)
-            loss = L2(outputs, labels.half())
+            outputs = net(imgs).view(-1)
+            loss = L2(outputs, labels)
             test_loss += loss.item()
 
     wandb.log(
