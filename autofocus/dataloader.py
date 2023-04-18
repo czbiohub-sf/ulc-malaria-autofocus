@@ -12,6 +12,7 @@ from torchvision.transforms import (
     Resize,
     RandomHorizontalFlip,
     RandomVerticalFlip,
+    ColorJitter,
 )
 
 from pathlib import Path
@@ -145,7 +146,13 @@ def get_datasets(
     ) = load_dataset_description(dataset_description_file)
 
     augmentations = (
-        [RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5)] if training else []
+        [
+            RandomHorizontalFlip(0.5),
+            RandomVerticalFlip(0.5),
+            ColorJitter(brightness=(0.95, 1.05)),
+        ]
+        if training
+        else []
     )
     # scale to [0,1]?
     transforms = Compose([Resize([300, 400]), *augmentations])
