@@ -9,6 +9,7 @@ from torch import nn
 from torch.optim import AdamW
 from torch.multiprocessing import set_start_method
 from torch.profiler import profile, ProfilerActivity, record_function
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from autofocus.model import AutoFocus
 from autofocus.dataloader import get_dataloader
@@ -21,6 +22,7 @@ BATCH_SIZE = 32
 
 class MockedModel(nn.Module):
     def __init__(self):
+        super().__init__()
         self.model = AutoFocus()
 
     def forward(self, *args, **kwargs):
@@ -37,25 +39,36 @@ def profile_run(
     net = MockedModel().to(dev)
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=ADAM_LR)
+    scheduler = CosineAnnealingLR(
+        optimizer, T_max=8 * len(train_dataloader), eta_min=ADAM_LR / 10
+    )
 
     print("here we goooooo!")
     with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
         with_stack=True,
         profile_memory=True,
+        schedule=torch.profiler.schedule(
+            wait=6,
+            warmup=12,
+            active=48,
+        ),
     ) as prof:
         for i, (imgs, labels) in enumerate(train_dataloader):
-            imgs = imgs.to(dev)
-            labels = labels.to(dev)
+            print(i)
+            imgs = imgs.to(dev, dtype=torch.float)
+            labels = labels.to(dev, dtype=torch.float)
 
             optimizer.zero_grad(set_to_none=True)
 
-            outputs = net(imgs).reshape(-1)
-            loss = L2(outputs, labels.float())
+            outputs = net(imgs).view(-1)
+            loss = L2(outputs, labels)
             loss.backward()
             optimizer.step()
+            scheduler.step()
+            prof.step()
 
-            if i > 50:
+            if i > 66:
                 break
 
         return prof
