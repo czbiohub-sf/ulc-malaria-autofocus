@@ -5,6 +5,7 @@ import tarfile
 
 import numpy as np
 
+from torch import nn
 from torchvision import datasets
 from torchvision.io import read_image, ImageReadMode
 from torch.utils.data import ConcatDataset, DataLoader, random_split, Subset
@@ -136,7 +137,6 @@ def is_valid_file(path: str) -> bool:
 def get_datasets(
     dataset_description_file: str,
     batch_size: int,
-    training: bool = True,
     img_size: Tuple[int, int] = (300, 400),
     split_fractions_override: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Subset[ConcatDataset[ImageFolderWithLabels]]]:
@@ -145,17 +145,7 @@ def get_datasets(
         split_fractions,
     ) = load_dataset_description(dataset_description_file)
 
-    augmentations = (
-        [
-            RandomHorizontalFlip(0.5),
-            RandomVerticalFlip(0.5),
-            ColorJitter(brightness=(0.95, 1.05)),
-        ]
-        if training
-        else []
-    )
-    # scale to [0,1]?
-    transforms = Compose([Resize([300, 400]), *augmentations])
+    transforms = Resize([300, 400])
 
     full_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
         ImageFolderWithLabels(
@@ -197,10 +187,18 @@ def get_datasets(
     )
 
 
+def collate_batch(batch, transforms: Optional[nn.Module] = None):
+    inputs, labels = zip(*batch)
+    batched_inputs = torch.stack(inputs)
+    batched_labels = torch.tensor(labels)
+    if transforms is not None:
+        return transforms(batched_inputs), batched_labels
+    return batched_inputs, batched_labels
+
+
 def get_dataloader(
     dataset_description_file: str,
     batch_size: int,
-    training: bool = True,
     img_size: Tuple[int, int] = (300, 400),
     device: Union[str, torch.device] = "cpu",
     split_fractions_override: Optional[Dict[str, float]] = None,
@@ -209,20 +207,29 @@ def get_dataloader(
         dataset_description_file,
         batch_size,
         img_size=img_size,
-        training=training,
         split_fractions_override=split_fractions_override,
     )
 
     d = dict()
     for designation, dataset in split_datasets.items():
+        augmentations = (
+            Compose([
+                RandomHorizontalFlip(0.5),
+                RandomVerticalFlip(0.5),
+                ColorJitter(brightness=(0.95, 1.05)),
+            ])
+            if designation == "train"
+            else None
+        )
         d[designation] = DataLoader(
             dataset,
-            batch_size=batch_size,
             shuffle=True,
             drop_last=True,
             pin_memory=True,
             num_workers=64,
+            batch_size=batch_size,
             persistent_workers=True,
             generator=torch.Generator().manual_seed(101010),
+            collate_fn=partial(collate_batch, transforms=augmentations),
         )
     return d
