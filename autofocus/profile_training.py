@@ -55,8 +55,8 @@ def profile_run(
         ),
     ) as prof:
         for i, (imgs, labels) in enumerate(train_dataloader):
-            imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
-            labels = labels.to(dev, dtype=torch.float, non_blocking=True)
+            imgs = imgs.to(dev, dtype=torch.float)
+            labels = labels.to(dev, dtype=torch.float)
 
             optimizer.zero_grad(set_to_none=True)
 

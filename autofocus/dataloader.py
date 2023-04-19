@@ -218,11 +218,11 @@ def get_dataloader(
         d[designation] = DataLoader(
             dataset,
             batch_size=batch_size,
+            shuffle=True,
             drop_last=True,
+            pin_memory=True,
+            num_workers=64,
             persistent_workers=True,
             generator=torch.Generator().manual_seed(101010),
-            pin_memory=True,
-            shuffle=True,
-            num_workers=64,
         )
     return d
