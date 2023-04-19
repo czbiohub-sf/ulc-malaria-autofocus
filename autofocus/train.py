@@ -151,7 +151,7 @@ def train(dev):
 def do_training(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    EPOCHS = 256
+    EPOCHS = 192
     ADAM_LR = 0.00007564058571387123
     BATCH_SIZE = 256
 
