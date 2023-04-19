@@ -17,7 +17,7 @@ from autofocus.dataloader import get_dataloader
 
 WARMUP = 2
 ADAM_LR = 3e-4
-BATCH_SIZE = 32
+BATCH_SIZE = 256
 
 
 class MockedModel(nn.Module):
@@ -55,9 +55,8 @@ def profile_run(
         ),
     ) as prof:
         for i, (imgs, labels) in enumerate(train_dataloader):
-            print(i)
-            imgs = imgs.to(dev, dtype=torch.float)
-            labels = labels.to(dev, dtype=torch.float)
+            imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
+            labels = labels.to(dev, dtype=torch.float, non_blocking=True)
 
             optimizer.zero_grad(set_to_none=True)
 

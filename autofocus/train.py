@@ -82,8 +82,8 @@ def train(dev):
     for epoch in range(config["epochs"]):
         for i, (imgs, labels) in enumerate(train_dataloader, 1):
             global_step += 1
-            imgs = imgs.to(dev, dtype=torch.float)
-            labels = labels.to(dev, dtype=torch.float)
+            imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
+            labels = labels.to(dev, dtype=torch.float, non_blocking=True)
 
             optimizer.zero_grad(set_to_none=True)
 
@@ -108,8 +108,8 @@ def train(dev):
         net.eval()
         for data in validate_dataloader:
             imgs, labels = data
-            imgs = imgs.to(dev, dtype=torch.float)
-            labels = labels.to(dev, dtype=torch.float)
+            imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
+            labels = labels.to(dev, dtype=torch.float, non_blocking=True)
 
             with torch.no_grad():
                 outputs = net(imgs).view(-1)
@@ -133,8 +133,8 @@ def train(dev):
     test_loss = 0.0
     for data in test_dataloader:
         imgs, labels = data
-        imgs = imgs.to(dev, dtype=torch.float)
-        labels = labels.to(dev, dtype=torch.float)
+        imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
+        labels = labels.to(dev, dtype=torch.float, non_blocking=True)
 
         with torch.no_grad():
             outputs = net(imgs).view(-1)
