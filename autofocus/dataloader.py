@@ -131,7 +131,7 @@ def read_grayscale(img_path):
 
 
 def is_valid_file(path: str) -> bool:
-    return not path.startswith(".")
+    return not Path(path).name.startswith(".")
 
 
 def get_datasets(
