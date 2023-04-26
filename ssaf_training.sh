@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=ULCMalariaSSAFTraining
+#SBATCH --job-name=SSAFTraining
 #SBATCH --time=16:00:00
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
