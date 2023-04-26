@@ -8,27 +8,26 @@ class AutoFocus(nn.Module):
 
         self.model = nn.Sequential(
             nn.Sequential(
-                nn.Conv2d(1, 16, 5, padding=5),
+                nn.Conv2d(1, 16, 7, stride=2, padding=5, bias=False),
                 nn.BatchNorm2d(16),
-                nn.LeakyReLU(),
-                nn.MaxPool2d(5, stride=5),
+                nn.GELU(),
             ),
             nn.Sequential(
-                nn.Conv2d(16, 32, 3, padding=3),
+                nn.Conv2d(16, 32, 5, stride=2, padding=3, bias=False),
                 nn.BatchNorm2d(32),
-                nn.LeakyReLU(),
-                nn.MaxPool2d(5, stride=2),
+                nn.GELU(),
             ),
             nn.Sequential(
-                nn.Conv2d(32, 32, 3, padding=2),
-                nn.BatchNorm2d(32),
-                nn.LeakyReLU(),
-                nn.MaxPool2d(5, stride=2),
+                nn.Conv2d(32, 64, 5, stride=2, padding=3, bias=False),
+                nn.BatchNorm2d(64),
+                nn.GELU(),
             ),
             nn.Sequential(
-                nn.Conv2d(32, 1, 3, padding=1),
+                nn.Conv2d(64, 1, 3, stride=2, padding=1),
                 nn.Flatten(start_dim=1),
-                nn.Linear(300, 1),
+                nn.Linear(520, 256),
+                nn.GELU(),
+                nn.Linear(256, 1),
             ),
         )
 
