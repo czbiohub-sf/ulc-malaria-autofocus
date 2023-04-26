@@ -47,7 +47,6 @@ def profile_run(
     with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
         with_stack=True,
-        profile_memory=True,
         schedule=torch.profiler.schedule(
             wait=6,
             warmup=12,
