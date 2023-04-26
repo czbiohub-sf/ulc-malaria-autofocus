@@ -83,7 +83,7 @@ class ImageLoader:
     def load_image_data(cls, path_to_data: str):
         "takes a path to either a single png image or a folder of pngs"
         device = choose_device()
-        transforms = Resize([300, 400])
+        transforms = Resize([300, 400], antialias=True)
 
         datapath = Path(path_to_data)
         data = [datapath] if datapath.is_file() else datapath.glob("*.png")
@@ -103,7 +103,7 @@ class ImageLoader:
     def load_zarr_data(cls, path_to_zarr: str):
         device = choose_device()
         data = zarr.open(path_to_zarr, mode="r")
-        transform = Compose([ToTensor(), Resize([300, 400])])
+        transform = Compose([ToTensor(), Resize([300, 400], antialias=True)])
 
         _num_els = data.initialized
 

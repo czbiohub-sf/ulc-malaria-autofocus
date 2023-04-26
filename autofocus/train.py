@@ -16,6 +16,7 @@ from pathlib import Path
 from copy import deepcopy
 
 torch.backends.cuda.matmul.allow_tf32 = True
+torch.cuda.set_sync_debug_mode(1)
 
 
 def checkpoint_model(model, epoch, optimizer, name):

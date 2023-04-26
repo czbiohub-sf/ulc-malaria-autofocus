@@ -145,7 +145,7 @@ def get_datasets(
         split_fractions,
     ) = load_dataset_description(dataset_description_file)
 
-    transforms = Resize([300, 400])
+    transforms = Resize([300, 400], antialias=True)
 
     full_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
         ImageFolderWithLabels(
