@@ -11,26 +11,24 @@ class AutoFocus(nn.Module):
                 nn.Conv2d(1, 16, 5, padding=5, bias=False),
                 nn.BatchNorm2d(16),
                 nn.LeakyReLU(),
-                nn.Conv2d(16, 16, 5, stride=2, bias=False),
+                nn.Conv2d(16, 16, 5, stride=2),
             ),
             nn.Sequential(
-                nn.Conv2d(16, 32, 3, padding=3, bias=False),
-                nn.BatchNorm2d(32),
+                nn.Conv2d(16, 32, 3, padding=3),
                 nn.LeakyReLU(),
-                nn.Conv2d(32, 32, 5, stride=2, bias=False),
+                nn.Conv2d(32, 32, 5, stride=2),
             ),
             nn.Sequential(
                 nn.Conv2d(32, 32, 3, padding=2, bias=False),
                 nn.BatchNorm2d(32),
                 nn.LeakyReLU(),
-                nn.Conv2d(32, 32, 5, stride=2, bias=False),
+                nn.Conv2d(32, 32, 5, stride=2),
             ),
             nn.Sequential(
-                nn.Conv2d(32, 1, 3, padding=1),
-                nn.Flatten(start_dim=1),
-                nn.Linear(1850, 512),
+                nn.Conv2d(32, 1, 1),
                 nn.LeakyReLU(),
-                nn.Linear(512, 1),
+                nn.Flatten(start_dim=1),
+                nn.Linear(1850, 1),
             ),
         )
 
