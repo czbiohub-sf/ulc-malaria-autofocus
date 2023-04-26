@@ -229,7 +229,7 @@ def get_dataloader(
             shuffle=True,
             drop_last=True,
             pin_memory=True,
-            num_workers=mp.cpu_count() - 1,
+            num_workers=min(max(mp.cpu_count() - 1, 4), 16),
             batch_size=batch_size,
             persistent_workers=True,
             generator=torch.Generator().manual_seed(101010),
