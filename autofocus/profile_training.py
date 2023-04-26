@@ -24,6 +24,7 @@ class MockedModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = AutoFocus()
+        self.model = torch.jit.script(self.model)
 
     def forward(self, *args, **kwargs):
         with record_function("MODEL FORWARD"):
@@ -54,8 +55,8 @@ def profile_run(
         ),
     ) as prof:
         for i, (imgs, labels) in enumerate(train_dataloader):
-            imgs = imgs.to(dev, dtype=torch.float)
-            labels = labels.to(dev, dtype=torch.float)
+            imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
+            labels = labels.to(dev, dtype=torch.float, non_blocking=True)
 
             optimizer.zero_grad(set_to_none=True)
 
@@ -66,7 +67,7 @@ def profile_run(
             scheduler.step()
             prof.step()
 
-            if i > 66:
+            if i > 6 + 12 + 48:
                 break
 
         return prof
