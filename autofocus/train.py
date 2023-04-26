@@ -16,7 +16,6 @@ from pathlib import Path
 from copy import deepcopy
 
 torch.backends.cuda.matmul.allow_tf32 = True
-torch.cuda.set_sync_debug_mode(1)
 
 
 def checkpoint_model(model, epoch, optimizer, name):
@@ -63,6 +62,8 @@ def train(dev):
     config = wandb.config
 
     net = AutoFocus().to(dev)
+    net = torch.jit.script(net)
+
     L2 = nn.MSELoss().to(dev)
     optimizer = AdamW(net.parameters(), lr=config["learning_rate"])
 
