@@ -4,6 +4,7 @@ import torch
 import tarfile
 
 import numpy as np
+import multiprocessing as mp
 
 from torch import nn
 from torchvision import datasets
@@ -226,7 +227,7 @@ def get_dataloader(
             shuffle=True,
             drop_last=True,
             pin_memory=True,
-            num_workers=64,
+            num_workers=mp.cpu_count() - 1,
             batch_size=batch_size,
             persistent_workers=True,
             generator=torch.Generator().manual_seed(101010),
