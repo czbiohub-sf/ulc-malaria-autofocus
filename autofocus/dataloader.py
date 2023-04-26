@@ -214,11 +214,13 @@ def get_dataloader(
     d = dict()
     for designation, dataset in split_datasets.items():
         augmentations = (
-            Compose([
-                RandomHorizontalFlip(0.5),
-                RandomVerticalFlip(0.5),
-                ColorJitter(brightness=(0.95, 1.05)),
-            ])
+            Compose(
+                [
+                    RandomHorizontalFlip(0.5),
+                    RandomVerticalFlip(0.5),
+                    ColorJitter(brightness=(0.95, 1.05)),
+                ]
+            )
             if designation == "train"
             else None
         )
