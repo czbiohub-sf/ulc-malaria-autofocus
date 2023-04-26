@@ -28,7 +28,9 @@ class AutoFocus(nn.Module):
                 nn.Conv2d(32, 1, 1),
                 nn.LeakyReLU(),
                 nn.Flatten(start_dim=1),
-                nn.Linear(1850, 1),
+                nn.Linear(1850, 512),
+                nn.LeakyReLU(),
+                nn.Linear(512, 1),
             ),
         )
 
