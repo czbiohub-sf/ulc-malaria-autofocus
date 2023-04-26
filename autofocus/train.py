@@ -130,9 +130,12 @@ def train(dev):
 
         net.train()
 
+    # load best!
+    net.load_state_dict(torch.load(model_save_dir / "best.pth")["model_state_dict"])
+
     print("done training")
     net.eval()
-    test_loss = 0.0
+    test_loss = tensor.tensor(0.0, device=dev)
     for data in test_dataloader:
         imgs, labels = data
         imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
@@ -141,7 +144,7 @@ def train(dev):
         with torch.no_grad():
             outputs = net(imgs).view(-1)
             loss = L2(outputs, labels)
-            test_loss += loss.item()
+            test_loss += loss
 
     wandb.log(
         {
