@@ -135,7 +135,7 @@ def train(dev):
 
     print("done training")
     net.eval()
-    test_loss = tensor.tensor(0.0, device=dev)
+    test_loss = torch.tensor(0.0, device=dev)
     for data in test_dataloader:
         imgs, labels = data
         imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
@@ -167,7 +167,7 @@ def do_training(args):
             "learning_rate": ADAM_LR,
             "epochs": EPOCHS,
             "batch_size": BATCH_SIZE,
-            "weight_decay: ": 0.01,
+            "weight_decay": 0.01,
             "device": str(device),
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
