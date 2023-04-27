@@ -15,7 +15,7 @@ parameters:
     min: 1e-7
     max: 3e-2
   epochs:
-    distribution: uniform
+    distribution: int_uniform
     min: 16
     max: 128
   weight_decay:
