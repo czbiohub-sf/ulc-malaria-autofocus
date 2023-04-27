@@ -65,7 +65,11 @@ def train(dev):
     net = torch.jit.script(net)
 
     L2 = nn.MSELoss().to(dev)
-    optimizer = AdamW(net.parameters(), lr=config["learning_rate"], weight_decay=config["weight_decay"])
+    optimizer = AdamW(
+        net.parameters(),
+        lr=config["learning_rate"],
+        weight_decay=config["weight_decay"],
+    )
 
     (
         model_save_dir,
