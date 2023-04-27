@@ -6,6 +6,7 @@ import zarr
 import torch
 import allantools as at
 
+from tqdm import tqdm
 from pathlib import Path
 from typing import Union, Optional
 
