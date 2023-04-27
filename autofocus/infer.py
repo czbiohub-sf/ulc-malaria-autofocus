@@ -16,16 +16,6 @@ from autofocus.argparsers import infer_parser
 from autofocus.dataloader import read_grayscale
 
 
-def _tqdm(iterable, **kwargs):
-    return iterable
-
-
-try:
-    from tqdm import tqdm
-except ImportError:
-    tqdm = _tqdm
-
-
 def choose_device():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
