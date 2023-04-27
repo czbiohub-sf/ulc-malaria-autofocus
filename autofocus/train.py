@@ -135,7 +135,9 @@ def train(dev):
         net.train()
 
     # load best!
-    net.load_state_dict(torch.load(model_save_dir / "best.pth")["model_state_dict"])
+    net = AutoFocus.from_pth(model_save_dir / "best.pth")
+    net = net.to(dev)
+    net = torch.jit.script(net)
 
     print("done training")
     net.eval()

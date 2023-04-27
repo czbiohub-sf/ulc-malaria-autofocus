@@ -1,6 +1,9 @@
 import torch
 from torch import nn
 
+from typing import Union
+from pathlib import Path
+
 
 class AutoFocus(nn.Module):
     def __init__(self):
@@ -45,6 +48,17 @@ class AutoFocus(nn.Module):
             )
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
+
+    @classmethod
+    def from_pth(cls, path_to_pth_file: Union[str, Path]) -> "AutoFocus":
+        model = cls()
+        checkpoint = torch.load(
+            path_to_pth_file,
+            map_location="cpu"
+        )
+        msd = checkpoint["model_state_dict"]
+        model.load_state_dict(msd)
+        return model
 
     def forward(self, x):
         return self.model(x)
