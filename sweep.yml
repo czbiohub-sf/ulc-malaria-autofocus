@@ -3,7 +3,7 @@ command:
   - run
   - python3
   - ${program}
-  - ../avt_and_basler.yml
+  - ../avt-only.yml
 program: train.py
 method: bayes
 metric:
