@@ -96,20 +96,22 @@ class ImageLoader:
         data = zarr.open(path_to_zarr, mode="r")
         transform = Compose([ToTensor(), Resize([300, 400], antialias=True)])
 
-        _num_els = data.initialized
+        _num_els = data.initialized if isinstance(data, zarr.Array) else len(data)
 
         def _iter():
             for i in range(_num_els):
                 # cheap trick
-                img = transform(data[:, :, i]) * 255
+                img = data[:, :, i] if isinstance(data, zarr.Array) else data[i][:]
+                img = transform(img) * 255
                 img.unsqueeze_(dim=0)
                 yield img.to(device)
 
         return cls(_iter, _num_els)
 
 
+@torch.no_grad()
 def predict(
-    pth_path: Path,
+    path_to_pth: Path,
     path_to_images: Optional[Path] = None,
     path_to_zarr: Optional[Path] = None,
     calc_allan_dev: bool = False,
@@ -117,7 +119,7 @@ def predict(
     print_results: bool = False,
     device: Union[str, torch.device] = "cpu",
 ):
-    model = load_model_for_inference(pth_path, device)
+    model = load_model_for_inference(path_to_pth, device)
     image_loader = (
         ImageLoader.load_image_data(path_to_images, device=device)
         if path_to_images is not None
@@ -151,7 +153,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     predict(
-        pth_path=args.pth,
+        path_to_pth=args.pth,
         path_to_images=args.images,
         path_to_zarr=args.zarr,
         calc_allan_dev=args.allan_dev,
