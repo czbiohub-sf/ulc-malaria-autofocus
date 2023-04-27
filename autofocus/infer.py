@@ -7,6 +7,7 @@ import torch
 import allantools as at
 
 from pathlib import Path
+from typing import Union, Optional
 
 from torchvision.transforms import Resize, Compose, ToTensor
 
@@ -77,7 +78,9 @@ class ImageLoader:
         return self._num_els
 
     @classmethod
-    def load_image_data(cls, path_to_data: str, device: Union[str, torch.device] = "cpu"):
+    def load_image_data(
+        cls, path_to_data: str, device: Union[str, torch.device] = "cpu"
+    ):
         "takes a path to either a single png image or a folder of pngs"
         transforms = Resize([300, 400], antialias=True)
 
@@ -96,7 +99,9 @@ class ImageLoader:
         return cls(_iter, _num_els)
 
     @classmethod
-    def load_zarr_data(cls, path_to_zarr: str, device: Union[str, torch.device] = "cpu"):
+    def load_zarr_data(
+        cls, path_to_zarr: str, device: Union[str, torch.device] = "cpu"
+    ):
         data = zarr.open(path_to_zarr, mode="r")
         transform = Compose([ToTensor(), Resize([300, 400], antialias=True)])
 
@@ -113,14 +118,14 @@ class ImageLoader:
 
 
 def predict(
-        pth_path: Path,
-        path_to_images: Optional[Path] = None,
-        path_to_zarr: Optional[Path] = None,
-        calc_allan_dev: bool = False,
-        output: Optional[Path] = None,
-        print_results: bool = False,
-        device: Union[str, torch.device] = "cpu"
-    ):
+    pth_path: Path,
+    path_to_images: Optional[Path] = None,
+    path_to_zarr: Optional[Path] = None,
+    calc_allan_dev: bool = False,
+    output: Optional[Path] = None,
+    print_results: bool = False,
+    device: Union[str, torch.device] = "cpu",
+):
     model = load_model_for_inference(pth_path, device)
     image_loader = (
         ImageLoader.load_image_data(path_to_images, device=device)
@@ -161,5 +166,5 @@ if __name__ == "__main__":
         calc_allan_dev=args.allan_dev,
         output=args.output,
         print_results=args.print_results,
-        device=device
+        device=device,
     )

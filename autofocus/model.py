@@ -52,10 +52,7 @@ class AutoFocus(nn.Module):
     @classmethod
     def from_pth(cls, path_to_pth_file: Union[str, Path]) -> "AutoFocus":
         model = cls()
-        checkpoint = torch.load(
-            path_to_pth_file,
-            map_location="cpu"
-        )
+        checkpoint = torch.load(path_to_pth_file, map_location="cpu")
         msd = checkpoint["model_state_dict"]
         model.load_state_dict(msd)
         return model
