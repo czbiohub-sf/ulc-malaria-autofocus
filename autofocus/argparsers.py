@@ -28,6 +28,12 @@ def infer_parser(parser=None):
         action=boolean_action,
         default=False,
     )
+    parser.add_argument(
+        "--print-results",
+        help="print results to stdout",
+        action=boolean_action,
+        default=False,
+    )
 
     return parser
 
