@@ -4,8 +4,8 @@ command:
   - python3
   - ${program}
   - ../avt-only.yml
-program: train.py
-method: bayes
+program: autofocus/train.py
+method: random
 metric:
   goal: minimize
   name: test_loss
