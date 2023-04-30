@@ -161,12 +161,16 @@ def get_datasets(
     if split_fractions_override is not None:
         split_fractions = split_fractions_override
 
-    dataset_sizes = {
-        designation: int(split_fractions[designation] * len(full_dataset))
-        for designation in ["train", "val"]
-    }
-    test_dataset_size = {"test": len(full_dataset) - sum(dataset_sizes.values())}
-    split_sizes = {**dataset_sizes, **test_dataset_size}
+    split_keys = list(split_fractions.keys())
+    if len(split_keys) > 1:
+        dataset_sizes = {
+            designation: int(split_fractions[designation] * len(full_dataset))
+            for designation in split_keys[:-1]
+        }
+        test_dataset_size = {split_keys[-1]: len(full_dataset) - sum(dataset_sizes.values())}
+        split_sizes = {**dataset_sizes, **test_dataset_size}
+    else:
+        split_sizes = {split_keys[0]: len(full_dataset)}
 
     assert all([sz > 0 for sz in split_sizes.values()]) and sum(
         split_sizes.values()
@@ -178,10 +182,10 @@ def get_datasets(
     # of lengths of dataset. So we do this verbose rigamarol.
     return dict(
         zip(
-            ["train", "val", "test"],
+            split_keys,
             random_split(
                 full_dataset,
-                [split_sizes["train"], split_sizes["val"], split_sizes["test"]],
+                [split_sizes[split_key] for split_key in split_keys],
                 generator=torch.Generator().manual_seed(101010),
             ),
         )
