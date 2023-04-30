@@ -167,7 +167,9 @@ def get_datasets(
             designation: int(split_fractions[designation] * len(full_dataset))
             for designation in split_keys[:-1]
         }
-        test_dataset_size = {split_keys[-1]: len(full_dataset) - sum(dataset_sizes.values())}
+        test_dataset_size = {
+            split_keys[-1]: len(full_dataset) - sum(dataset_sizes.values())
+        }
         split_sizes = {**dataset_sizes, **test_dataset_size}
     else:
         split_sizes = {split_keys[0]: len(full_dataset)}
@@ -207,6 +209,7 @@ def get_dataloader(
     img_size: Tuple[int, int] = (300, 400),
     device: Union[str, torch.device] = "cpu",
     split_fractions_override: Optional[Dict[str, float]] = None,
+    num_workers: Optional[int] = None,
 ):
     split_datasets = get_datasets(
         dataset_description_file,
@@ -216,6 +219,9 @@ def get_dataloader(
     )
 
     d = dict()
+    num_workers = (
+        num_workers if num_workers is not None else min(max(mp.cpu_count() - 1, 4), 16)
+    )
     for designation, dataset in split_datasets.items():
         augmentations = (
             Compose(
@@ -233,7 +239,7 @@ def get_dataloader(
             shuffle=True,
             drop_last=True,
             pin_memory=True,
-            num_workers=min(max(mp.cpu_count() - 1, 4), 16),
+            num_workers=num_workers,
             batch_size=batch_size,
             persistent_workers=True,
             generator=torch.Generator().manual_seed(101010),
