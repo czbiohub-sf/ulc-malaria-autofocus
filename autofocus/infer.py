@@ -21,7 +21,9 @@ def choose_device():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def load_model_for_inference(path_to_pth: str, device: torch.device):
+def load_model_for_inference(
+    path_to_pth: Union[str, Path], device: Union[str, torch.device]
+):
     net = AutoFocus.from_pth(path_to_pth)
     net.eval()
     net.to(device)
@@ -70,7 +72,7 @@ class ImageLoader:
 
     @classmethod
     def load_image_data(
-        cls, path_to_data: str, device: Union[str, torch.device] = "cpu"
+        cls, path_to_data: Union[str, Path], device: Union[str, torch.device] = "cpu"
     ):
         "takes a path to either a single png image or a folder of pngs"
         transforms = Resize([300, 400], antialias=True)
@@ -91,7 +93,7 @@ class ImageLoader:
 
     @classmethod
     def load_zarr_data(
-        cls, path_to_zarr: str, device: Union[str, torch.device] = "cpu"
+        cls, path_to_zarr: Union[str, Path], device: Union[str, torch.device] = "cpu"
     ):
         data = zarr.open(path_to_zarr, mode="r")
         transform = Compose([ToTensor(), Resize([300, 400], antialias=True)])
