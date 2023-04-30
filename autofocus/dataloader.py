@@ -238,10 +238,10 @@ def get_dataloader(
             dataset,
             shuffle=True,
             drop_last=True,
-            pin_memory=True,
-            num_workers=num_workers,
             batch_size=batch_size,
-            persistent_workers=True,
+            num_workers=num_workers,
+            pin_memory=num_workers > 0,
+            persistent_workers=num_workers > 0,
             generator=torch.Generator().manual_seed(101010),
             collate_fn=partial(collate_batch, transforms=augmentations),
         )
