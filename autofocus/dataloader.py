@@ -72,7 +72,7 @@ class ImageFolderWithLabels(datasets.ImageFolder):
 
 def load_dataset_description(
     dataset_description,
-) -> Tuple[List[str], List[Dict[str, Path]], Dict[str, float]]:
+) -> Tuple[List[str], Dict[str, float]]:
     with open(dataset_description, "r") as desc:
         yaml_data = yaml.safe_load(desc)
 
@@ -161,12 +161,18 @@ def get_datasets(
     if split_fractions_override is not None:
         split_fractions = split_fractions_override
 
-    dataset_sizes = {
-        designation: int(split_fractions[designation] * len(full_dataset))
-        for designation in ["train", "val"]
-    }
-    test_dataset_size = {"test": len(full_dataset) - sum(dataset_sizes.values())}
-    split_sizes = {**dataset_sizes, **test_dataset_size}
+    split_keys = list(split_fractions.keys())
+    if len(split_keys) > 1:
+        dataset_sizes = {
+            designation: int(split_fractions[designation] * len(full_dataset))
+            for designation in split_keys[:-1]
+        }
+        test_dataset_size = {
+            split_keys[-1]: len(full_dataset) - sum(dataset_sizes.values())
+        }
+        split_sizes = {**dataset_sizes, **test_dataset_size}
+    else:
+        split_sizes = {split_keys[0]: len(full_dataset)}
 
     assert all([sz > 0 for sz in split_sizes.values()]) and sum(
         split_sizes.values()
@@ -178,10 +184,10 @@ def get_datasets(
     # of lengths of dataset. So we do this verbose rigamarol.
     return dict(
         zip(
-            ["train", "val", "test"],
+            split_keys,
             random_split(
                 full_dataset,
-                [split_sizes["train"], split_sizes["val"], split_sizes["test"]],
+                [split_sizes[split_key] for split_key in split_keys],
                 generator=torch.Generator().manual_seed(101010),
             ),
         )
@@ -203,6 +209,8 @@ def get_dataloader(
     img_size: Tuple[int, int] = (300, 400),
     device: Union[str, torch.device] = "cpu",
     split_fractions_override: Optional[Dict[str, float]] = None,
+    num_workers: Optional[int] = None,
+    no_augmentation_split_fraction_name: str = "train",
 ):
     split_datasets = get_datasets(
         dataset_description_file,
@@ -212,24 +220,29 @@ def get_dataloader(
     )
 
     d = dict()
+    num_workers = (
+        num_workers if num_workers is not None else min(max(mp.cpu_count() - 1, 4), 16)
+    )
     for designation, dataset in split_datasets.items():
         augmentations = (
-            Compose([
-                RandomHorizontalFlip(0.5),
-                RandomVerticalFlip(0.5),
-                ColorJitter(brightness=(0.95, 1.05)),
-            ])
-            if designation == "train"
+            Compose(
+                [
+                    RandomHorizontalFlip(0.5),
+                    RandomVerticalFlip(0.5),
+                    ColorJitter(brightness=(0.95, 1.05)),
+                ]
+            )
+            if designation == no_augmentation_split_fraction_name
             else None
         )
         d[designation] = DataLoader(
             dataset,
             shuffle=True,
             drop_last=True,
-            pin_memory=True,
-            num_workers=mp.cpu_count() - 1,
             batch_size=batch_size,
-            persistent_workers=True,
+            num_workers=num_workers,
+            pin_memory=num_workers > 0,
+            persistent_workers=num_workers > 0,
             generator=torch.Generator().manual_seed(101010),
             collate_fn=partial(collate_batch, transforms=augmentations),
         )

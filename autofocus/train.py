@@ -16,7 +16,6 @@ from pathlib import Path
 from copy import deepcopy
 
 torch.backends.cuda.matmul.allow_tf32 = True
-torch.cuda.set_sync_debug_mode(1)
 
 
 def checkpoint_model(model, epoch, optimizer, name):
@@ -63,8 +62,14 @@ def train(dev):
     config = wandb.config
 
     net = AutoFocus().to(dev)
+    net = torch.jit.script(net)
+
     L2 = nn.MSELoss().to(dev)
-    optimizer = AdamW(net.parameters(), lr=config["learning_rate"])
+    optimizer = AdamW(
+        net.parameters(),
+        lr=config["learning_rate"],
+        weight_decay=config["weight_decay"],
+    )
 
     (
         model_save_dir,
@@ -129,9 +134,14 @@ def train(dev):
 
         net.train()
 
+    # load best!
+    net = AutoFocus.from_pth(model_save_dir / "best.pth")
+    net = net.to(dev)
+    net = torch.jit.script(net)
+
     print("done training")
     net.eval()
-    test_loss = 0.0
+    test_loss = torch.tensor(0.0, device=dev)
     for data in test_dataloader:
         imgs, labels = data
         imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
@@ -140,7 +150,7 @@ def train(dev):
         with torch.no_grad():
             outputs = net(imgs).view(-1)
             loss = L2(outputs, labels)
-            test_loss += loss.item()
+            test_loss += loss
 
     wandb.log(
         {
@@ -163,6 +173,7 @@ def do_training(args):
             "learning_rate": ADAM_LR,
             "epochs": EPOCHS,
             "batch_size": BATCH_SIZE,
+            "weight_decay": 0.01,
             "device": str(device),
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,

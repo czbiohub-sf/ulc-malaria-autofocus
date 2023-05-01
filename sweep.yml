@@ -3,18 +3,21 @@ command:
   - run
   - python3
   - ${program}
-  - ../avt_and_basler.yml
-program: train.py
+  - ../avt-only.yml
+program: autofocus/train.py
 method: random
 metric:
   goal: minimize
-  name: val loss
+  name: test_loss
 parameters:
   learning_rate:
     distribution: log_uniform_values
-    min: 3e-6
+    min: 1e-7
     max: 3e-2
-  batch_size:
-    distribution: q_log_uniform_values
+  epochs:
+    distribution: int_uniform
     min: 16
-    max: 512
+    max: 128
+  weight_decay:
+    min: 0.00001
+    max: 0.1
