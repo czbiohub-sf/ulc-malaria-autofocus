@@ -120,7 +120,7 @@ def predict(
     output: Optional[Path] = None,
     print_results: bool = False,
     device: Union[str, torch.device] = "cpu",
-):
+) -> Optional[torch.Tensor]:
     model = load_model_for_inference(path_to_pth, device)
     image_loader = (
         ImageLoader.load_image_data(path_to_images, device=device)
@@ -134,7 +134,10 @@ def predict(
         for res in infer(model, image_loader):
             print(res)
     elif output is None:
-        return [res for res in infer(model, image_loader)]
+        arr = torch.zeros(len(image_loader))
+        for i, res in enumerate(infer(model, image_loader)):
+            arr[i] = res
+        return arr
     else:
         with open(args.output, "w") as file:
             for res in infer(model, image_loader):
