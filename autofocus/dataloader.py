@@ -210,6 +210,7 @@ def get_dataloader(
     device: Union[str, torch.device] = "cpu",
     split_fractions_override: Optional[Dict[str, float]] = None,
     num_workers: Optional[int] = None,
+    no_augmentation_split_fraction_name: str = "train"
 ):
     split_datasets = get_datasets(
         dataset_description_file,
@@ -231,7 +232,7 @@ def get_dataloader(
                     ColorJitter(brightness=(0.95, 1.05)),
                 ]
             )
-            if designation == "train"
+            if designation == no_augmentation_split_fraction_name
             else None
         )
         d[designation] = DataLoader(
