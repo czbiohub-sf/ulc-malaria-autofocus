@@ -122,6 +122,8 @@ def predict(
     device: Union[str, torch.device] = "cpu",
 ) -> Optional[torch.Tensor]:
     model = load_model_for_inference(path_to_pth, device)
+    model = torch.jit.script(model)
+
     image_loader = (
         ImageLoader.load_image_data(path_to_images, device=device)
         if path_to_images is not None
