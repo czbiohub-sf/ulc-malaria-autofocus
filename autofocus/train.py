@@ -33,6 +33,7 @@ def init_dataloaders(config):
     dataloaders = get_dataloader(
         config["dataset_descriptor_file"],
         config["batch_size"],
+        img_size = config["resize_shape"],
     )
 
     test_dataloader = dataloaders["test"]
@@ -175,6 +176,7 @@ def do_training(args):
             "batch_size": BATCH_SIZE,
             "weight_decay": 0.01,
             "device": str(device),
+            "resize_shape": (150,200),
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
             "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),
