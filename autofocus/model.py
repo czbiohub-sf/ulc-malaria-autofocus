@@ -32,7 +32,7 @@ class AutoFocus(nn.Module):
                 nn.LeakyReLU(),
                 nn.Flatten(start_dim=1),
                 nn.Linear(1850, 512),
-                nn.Dropout(p=0.5),
+                nn.Dropout(p=0.3),
                 nn.LeakyReLU(),
                 nn.Linear(512, 1),
             ),
