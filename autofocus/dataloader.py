@@ -20,12 +20,12 @@ from torchvision.transforms import (
 
 from pathlib import Path
 from functools import partial
-from typing import List, Dict, Union, Tuple, Optional
+from typing import List, Dict, Union, Tuple, Optional, Sequence
 
 
-def _dict_get_and_cast_to_int(dct: Dict[int, int], idx: int) -> int:
+def _dict_get_and_cast_to_int(dct: Dict[int, int], idx: int) -> torch.Tensor:
     "some weird picklability / multiprocessing thing with num_workers > 0 did this"
-    return int(dct[idx])
+    return torch.tensor(int(dct[idx]))
 
 
 class ImageFolderWithLabels(datasets.ImageFolder):
@@ -38,6 +38,8 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     """
 
     def __init__(self, *args, **kwargs):
+        self.valid_classes = list(range(-20, 21))
+
         super().__init__(*args, **kwargs)
 
         self.idx_to_class = {v: k for k, v in self.class_to_idx.items()}
@@ -51,13 +53,22 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     def find_classes(self, directory: Path) -> Tuple[List[str], Dict[str, int]]:
         "Adapted from torchvision.datasets.folder.py"
         classes = sorted(
-            entry.name for entry in os.scandir(directory) if entry.is_dir()
+            entry.name for entry in directory.iterdir() if entry.is_dir() and self.in_range(entry.name)
         )
         if not classes:
             raise FileNotFoundError(f"Couldn't find any class folder in {directory}.")
 
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
         return classes, class_to_idx
+
+    def in_range(self, class_name: str) -> bool:
+        if self.valid_classes is None:
+            return True
+
+        try:
+            return int(class_name) in self.valid_classes
+        except ValueError:
+            return False
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         img_path = str(self.paths[index], encoding="utf-8")
@@ -229,7 +240,7 @@ def get_dataloader(
                 [
                     RandomHorizontalFlip(0.5),
                     RandomVerticalFlip(0.5),
-                    ColorJitter(brightness=(0.95, 1.05)),
+                    ColorJitter(brightness=(0.90, 1.10)),
                 ]
             )
             if designation == augmentation_split_fraction_name
