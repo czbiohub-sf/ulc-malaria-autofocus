@@ -164,7 +164,7 @@ def do_training(args):
 
     EPOCHS = 192
     ADAM_LR = 0.00007564058571387123
-    BATCH_SIZE = 32
+    BATCH_SIZE = 64
 
     wandb.init(
         project="ulc-malaria-autofocus",
