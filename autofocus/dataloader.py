@@ -240,7 +240,7 @@ def get_dataloader(
                 [
                     RandomHorizontalFlip(0.5),
                     RandomVerticalFlip(0.5),
-                    ColorJitter(brightness=(0.95, 1.05)),
+                    ColorJitter(brightness=(0.90, 1.10)),
                 ]
             )
             if designation == augmentation_split_fraction_name
