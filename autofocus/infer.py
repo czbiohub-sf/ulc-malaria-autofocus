@@ -87,7 +87,7 @@ class ImageLoader:
                 image = read_grayscale(img_name)
                 preprocessed = transforms(image)
                 preprocessed.unsqueeze_(dim=0)
-                yield preprocessed.to(device)
+                yield preprocessed.to(device, dtype=torch.float)
 
         return cls(_iter, _num_els)
 
@@ -127,7 +127,9 @@ def predict(
     image_loader = (
         ImageLoader.load_image_data(path_to_images, device=device)
         if path_to_images is not None
-        else ImageLoader.load_zarr_data(path_to_zarr, device=device)
+        else ImageLoader.load_zarr_data(
+            path_to_zarr, device=device
+        )
     )
 
     if calc_allan_dev:
@@ -150,7 +152,6 @@ if __name__ == "__main__":
     parser = infer_parser()
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"using {device}")
 
     no_imgs = args.images is None
     no_zarr = args.zarr is None
@@ -160,7 +161,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     predict(
-        path_to_pth=args.pth,
+        path_to_pth=args.pth_path,
         path_to_images=args.images,
         path_to_zarr=args.zarr,
         calc_allan_dev=args.allan_dev,
