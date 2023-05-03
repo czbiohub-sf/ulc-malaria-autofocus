@@ -31,8 +31,8 @@ def load_model_for_inference(
 
 
 def infer(model, image_loader):
-    for image in image_loader:
-        with torch.no_grad():
+    with torch.no_grad():
+        for image in image_loader:
             res = model(image)
             yield res.item()
 
@@ -40,11 +40,6 @@ def infer(model, image_loader):
 def calculate_allan_dev(model, image_loader):
     ds = at.Dataset(data=[v for v in infer(model, tqdm(image_loader))])
     res = ds.compute("tdev")
-    res["taus"]
-    res["stat"]
-
-    with open("allan_dev_calc.txt", "w") as f:
-        f.write("\n".join(f"{t},{s}" for t, s in zip(res["taus"], res["stat"])))
 
     pl = at.Plot()
     pl.plot(ds, errorbars=True, grid=True)

@@ -18,12 +18,13 @@ from copy import deepcopy
 torch.backends.cuda.matmul.allow_tf32 = True
 
 
-def checkpoint_model(model, epoch, optimizer, name):
+def checkpoint_model(model, epoch, optimizer, name, img_size):
     torch.save(
         {
             "epoch": epoch,
             "model_state_dict": deepcopy(model.state_dict()),
             "optimizer_state_dict": deepcopy(optimizer.state_dict()),
+            "img_size": img_size,
         },
         str(name),
     )
@@ -128,10 +129,10 @@ def train(dev):
         )
 
         if val_loss < best_val_loss:
-            checkpoint_model(net, epoch, optimizer, model_save_dir / "best.pth")
+            checkpoint_model(net, epoch, optimizer, model_save_dir / "best.pth", config["resize_shape"])
             best_val_loss = val_loss
 
-        checkpoint_model(net, epoch, optimizer, model_save_dir / "latest.pth")
+        checkpoint_model(net, epoch, optimizer, model_save_dir / "latest.pth", config["resize_shape"])
 
         net.train()
 

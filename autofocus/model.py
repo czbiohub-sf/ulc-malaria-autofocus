@@ -40,6 +40,8 @@ class AutoFocus(nn.Module):
 
         self.model.apply(self.init_network_weights)
 
+        self.img_size = (300,400)  # default
+
     @staticmethod
     def init_network_weights(module: nn.Module):
         if isinstance(module, nn.Conv2d):
@@ -56,6 +58,7 @@ class AutoFocus(nn.Module):
         checkpoint = torch.load(path_to_pth_file, map_location="cpu")
         msd = checkpoint["model_state_dict"]
         model.load_state_dict(msd)
+        model.img_size = checkpoint["img_size"]
         return model
 
     def forward(self, x):
@@ -86,6 +89,7 @@ class AutoFocusOlder(nn.Module):
         self.conv_block_4 = nn.Sequential(
             nn.Conv2d(32, 1, 3, padding=1), nn.Flatten(start_dim=1), nn.Linear(300, 1)
         )
+        self.img_size = (300,400)  # default
 
     @classmethod
     def from_pth(cls, path_to_pth_file: Union[str, Path]) -> "AutoFocusOlder":
@@ -93,6 +97,7 @@ class AutoFocusOlder(nn.Module):
         checkpoint = torch.load(path_to_pth_file, map_location="cpu")
         msd = checkpoint["model_state_dict"]
         model.load_state_dict(msd)
+        model.img_size = checkpoint["img_size"]
         return model
 
     def forward(self, x: torch.Tensor):
