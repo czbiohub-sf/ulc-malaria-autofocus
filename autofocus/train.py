@@ -33,6 +33,7 @@ def init_dataloaders(config):
     dataloaders = get_dataloader(
         config["dataset_descriptor_file"],
         config["batch_size"],
+        img_size = config["resize_shape"],
     )
 
     test_dataloader = dataloaders["test"]
@@ -164,7 +165,7 @@ def do_training(args):
 
     EPOCHS = 192
     ADAM_LR = 0.00007564058571387123
-    BATCH_SIZE = 256
+    BATCH_SIZE = 64
 
     wandb.init(
         project="ulc-malaria-autofocus",
@@ -175,6 +176,7 @@ def do_training(args):
             "batch_size": BATCH_SIZE,
             "weight_decay": 0.05,
             "device": str(device),
+            "resize_shape": (150,200),
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
             "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),
