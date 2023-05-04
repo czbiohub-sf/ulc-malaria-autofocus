@@ -34,7 +34,7 @@ def init_dataloaders(config):
     dataloaders = get_dataloader(
         config["dataset_descriptor_file"],
         config["batch_size"],
-        img_size = config["resize_shape"],
+        img_size=config["resize_shape"],
     )
 
     test_dataloader = dataloaders["test"]
@@ -129,10 +129,18 @@ def train(dev):
         )
 
         if val_loss < best_val_loss:
-            checkpoint_model(net, epoch, optimizer, model_save_dir / "best.pth", config["resize_shape"])
+            checkpoint_model(
+                net,
+                epoch,
+                optimizer,
+                model_save_dir / "best.pth",
+                config["resize_shape"],
+            )
             best_val_loss = val_loss
 
-        checkpoint_model(net, epoch, optimizer, model_save_dir / "latest.pth", config["resize_shape"])
+        checkpoint_model(
+            net, epoch, optimizer, model_save_dir / "latest.pth", config["resize_shape"]
+        )
 
         net.train()
 
@@ -177,7 +185,7 @@ def do_training(args):
             "batch_size": BATCH_SIZE,
             "weight_decay": 0.05,
             "device": str(device),
-            "resize_shape": (150,200),
+            "resize_shape": (150, 200),
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
             "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),

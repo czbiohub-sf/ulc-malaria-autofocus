@@ -53,7 +53,9 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     def find_classes(self, directory: Path) -> Tuple[List[str], Dict[str, int]]:
         "Adapted from torchvision.datasets.folder.py"
         classes = sorted(
-            entry.name for entry in directory.iterdir() if entry.is_dir() and self.in_range(entry.name)
+            entry.name
+            for entry in directory.iterdir()
+            if entry.is_dir() and self.in_range(entry.name)
         )
         if not classes:
             raise FileNotFoundError(f"Couldn't find any class folder in {directory}.")
