@@ -185,7 +185,7 @@ def do_training(args):
             "batch_size": BATCH_SIZE,
             "weight_decay": 0.05,
             "device": str(device),
-            "resize_shape": (150, 200),
+            "resize_shape": (300, 400),
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
             "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),
