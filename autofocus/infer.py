@@ -12,7 +12,7 @@ from typing import Union, Optional
 
 from torchvision.transforms import Resize, Compose, ToTensor
 
-from autofocus.model import AutoFocus
+from autofocus.model import AutoFocus, AutoFocusOlder
 from autofocus.argparsers import infer_parser
 from autofocus.dataloader import read_grayscale
 
@@ -24,7 +24,11 @@ def choose_device():
 def load_model_for_inference(
     path_to_pth: Union[str, Path], device: Union[str, torch.device]
 ):
-    net = AutoFocus.from_pth(path_to_pth)
+    net: Union[AutoFocus,AutoFocusOlder]
+    try:
+        net = AutoFocus.from_pth(path_to_pth)
+    except:
+        net = AutoFocusOlder.from_pth(path_to_pth)
     net.eval()
     net.to(device)
     return net

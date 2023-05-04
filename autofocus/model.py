@@ -97,7 +97,7 @@ class AutoFocusOlder(nn.Module):
         checkpoint = torch.load(path_to_pth_file, map_location="cpu")
         msd = checkpoint["model_state_dict"]
         model.load_state_dict(msd)
-        model.img_size = checkpoint["img_size"]
+        model.img_size = checkpoint.get("img_size", (300,400))
         return model
 
     def forward(self, x: torch.Tensor):
