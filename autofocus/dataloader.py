@@ -185,7 +185,7 @@ def get_datasets(
 
     split_fractions = dd.split_fractions
     dataset_paths = dd.dataset_paths
-    test_dataset_paths = dd.dataset_paths
+    test_dataset_paths = dd.test_dataset_paths
 
     transforms = Resize(img_size, antialias=True)
 
