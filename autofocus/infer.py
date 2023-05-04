@@ -5,6 +5,7 @@ import zarr
 
 import torch
 import allantools as at
+import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 from pathlib import Path
@@ -122,37 +123,51 @@ def predict(
     path_to_images: Optional[Path] = None,
     path_to_zarr: Optional[Path] = None,
     calc_allan_dev: bool = False,
+    plot: bool = False,
     output: Optional[Path] = None,
-    print_results: bool = False,
     device: Union[str, torch.device] = "cpu",
 ) -> Optional[torch.Tensor]:
     model = load_model_for_inference(path_to_pth, device)
     model = torch.jit.script(model)
 
-    image_loader = (
-        ImageLoader.load_image_data(
-            path_to_images, img_size=model.img_size, device=device
-        )
-        if path_to_images is not None
-        else ImageLoader.load_zarr_data(
+    if path_to_images:
+        image_loader = ImageLoader.load_image_data(
+                path_to_images, img_size=model.img_size, device=device
+            )
+        data_path = path_to_images
+    elif path_to_zarr:
+        image_loader = ImageLoader.load_zarr_data(
             path_to_zarr, img_size=model.img_size, device=device
         )
-    )
+        data_path = path_to_zarr
+    else:
+        raise ValueError("need path_to_images or path_to_zarr")
 
     if calc_allan_dev:
         calculate_allan_dev(model, image_loader)
-    elif output is None and print_results:
-        for res in infer(model, image_loader):
-            print(res)
-    elif output is None:
-        arr = torch.zeros(len(image_loader))
-        for i, res in enumerate(infer(model, image_loader)):
-            arr[i] = res
-        return arr
+        return None
+
+    arr = torch.zeros(len(image_loader))
+    for i, res in enumerate(tqdm(infer(model, image_loader))):
+        arr[i] = res
+
+    if plot:
+        fix,ax = plt.subplots(figsize=(10, 10))
+        ax.plot(arr)
+        ax.set_ylim([-20, 20])
+        ax.set_title(f"{data_path.name}\n{path_to_pth.parent.name}")
+
+        if output is None:
+            plt.show()
+        else:
+            plt.savefig(output.with_suffix(".png"), dpi=500)
+
+    elif output is not None:
+        with open(output.with_suffix(".txt"), "w") as f:
+            f.write("\n".join(map(str, arr.tolist())))
     else:
-        with open(args.output, "w") as file:
-            for res in infer(model, image_loader):
-                file.write(f"{res}\n")
+        for r in arr:
+            print(r.item())
 
 
 if __name__ == "__main__":
@@ -162,7 +177,6 @@ if __name__ == "__main__":
 
     no_imgs = args.images is None
     no_zarr = args.zarr is None
-    no_output = args.output is None
     if (no_imgs and no_zarr) or (not no_imgs and not no_zarr):
         print("you must supply a value for only one of --images or --zarr")
         sys.exit(1)
@@ -172,7 +186,7 @@ if __name__ == "__main__":
         path_to_images=args.images,
         path_to_zarr=args.zarr,
         calc_allan_dev=args.allan_dev,
-        output=args.output,
-        print_results=args.print_results,
+        plot=args.plot,
+        output=args.output_path,
         device=device,
     )

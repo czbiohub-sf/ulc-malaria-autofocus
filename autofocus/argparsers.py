@@ -1,5 +1,7 @@
 import argparse
 
+from pathlib import Path
+
 
 try:
     boolean_action = argparse.BooleanOptionalAction  # type: ignore
@@ -12,25 +14,33 @@ def infer_parser(parser=None):
         parser = argparse.ArgumentParser(description="infer results over some dataset")
 
     parser.add_argument(
-        "pth_path", type=str, help="path to .pth file defining the model"
+        "pth_path", type=Path, help="path to .pth file defining the model"
     )
-    parser.add_argument("--images", type=str, help="path to image or images")
-    parser.add_argument("--zarr", type=str, help="path to zarr store")
+
+    data_option = parser.add_mutually_exclusive_group(required=True)
+    data_option.add_argument("--images", type=Path, help="path to image or images")
+    data_option.add_argument("--zarr", type=Path, help="path to zarr store")
+
     parser.add_argument(
-        "--output",
-        type=str,
-        help="place to write data to",
+        "--output-path",
+        type=Path,
+        help=(
+            "output file name - if --plot is present, this will be the "
+            "image file name. Else, this will be the text file name"
+        ),
         default=None,
     )
-    parser.add_argument(
+
+    result_options = parser.add_mutually_exclusive_group(required=False)
+    result_options.add_argument(
         "--allan-dev",
         help="calculate allan deviation",
         action=boolean_action,
         default=False,
     )
-    parser.add_argument(
-        "--print-results",
-        help="print results to stdout",
+    result_options.add_argument(
+        "--plot",
+        help="plot results",
         action=boolean_action,
         default=False,
     )
@@ -44,20 +54,18 @@ def train_parser(parser=None):
 
     parser.add_argument(
         "dataset_descriptor_file",
-        type=str,
+        type=Path,
         help="path to yml dataset descriptor file",
     )
     parser.add_argument(
         "--note",
-        type=str,
-        nargs="?",
-        help="note for the run (e.g. 'run on a TI-82')",
+        type=Path,
+        help="note for the run (e.g. 'was run on a TI-82')",
         default="",
     )
     parser.add_argument(
         "--group",
-        type=str,
-        nargs="?",
+        type=Path,
         help="group that the run belongs to (e.g. 'mAP test')",
     )
     return parser
