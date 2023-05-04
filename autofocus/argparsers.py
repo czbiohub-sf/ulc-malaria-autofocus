@@ -58,6 +58,13 @@ def train_parser(parser=None):
         help="path to yml dataset descriptor file",
     )
     parser.add_argument(
+        "--resize",
+        type=int,
+        nargs=2,
+        default=(300,400),
+        help="resize image to these dimensions. e.g. '-r 300 400' to resize to width=300, height=400 (default 300 400)",
+    )
+    parser.add_argument(
         "--note",
         type=Path,
         help="note for the run (e.g. 'was run on a TI-82')",
