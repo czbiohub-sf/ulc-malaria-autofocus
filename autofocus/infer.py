@@ -67,10 +67,13 @@ class ImageLoader:
 
     @classmethod
     def load_image_data(
-        cls, path_to_data: Union[str, Path], device: Union[str, torch.device] = "cpu"
+        cls,
+        path_to_data: Union[str, Path],
+        img_size=(300, 400),
+        device: Union[str, torch.device] = "cpu",
     ):
         "takes a path to either a single png image or a folder of pngs"
-        transforms = Resize([300, 400], antialias=True)
+        transforms = Resize(img_size, antialias=True)
 
         datapath = Path(path_to_data)
         data = [datapath] if datapath.is_file() else datapath.glob("*.png")
@@ -88,10 +91,13 @@ class ImageLoader:
 
     @classmethod
     def load_zarr_data(
-        cls, path_to_zarr: Union[str, Path], device: Union[str, torch.device] = "cpu"
+        cls,
+        path_to_zarr: Union[str, Path],
+        img_size=(300, 400),
+        device: Union[str, torch.device] = "cpu",
     ):
         data = zarr.open(path_to_zarr, mode="r")
-        transform = Compose([ToTensor(), Resize([300, 400], antialias=True)])
+        transform = Compose([ToTensor(), Resize(img_size, antialias=True)])
 
         _num_els = data.initialized if isinstance(data, zarr.Array) else len(data)
 
@@ -120,10 +126,12 @@ def predict(
     model = torch.jit.script(model)
 
     image_loader = (
-        ImageLoader.load_image_data(path_to_images, device=device)
+        ImageLoader.load_image_data(
+            path_to_images, img_size=model.img_size, device=device
+        )
         if path_to_images is not None
         else ImageLoader.load_zarr_data(
-            path_to_zarr, device=device
+            path_to_zarr, img_size=model.img_size, device=device
         )
     )
 
