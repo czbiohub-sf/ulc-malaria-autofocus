@@ -66,13 +66,13 @@ def train_parser(parser=None):
     )
     parser.add_argument(
         "--note",
-        type=Path,
+        type=str,
         help="note for the run (e.g. 'was run on a TI-82')",
         default="",
     )
     parser.add_argument(
         "--group",
-        type=Path,
+        type=str,
         help="group that the run belongs to (e.g. 'mAP test')",
     )
     return parser
