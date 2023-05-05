@@ -61,7 +61,7 @@ def train_parser(parser=None):
         "--resize",
         type=int,
         nargs=2,
-        default=(300,400),
+        default=(300, 400),
         help="resize image to these dimensions. e.g. '-r 300 400' to resize to width=300, height=400 (default 300 400)",
     )
     parser.add_argument(

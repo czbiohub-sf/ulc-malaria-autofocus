@@ -25,7 +25,7 @@ def choose_device():
 def load_model_for_inference(
     path_to_pth: Union[str, Path], device: Union[str, torch.device]
 ):
-    net: Union[AutoFocus,AutoFocusOlder]
+    net: Union[AutoFocus, AutoFocusOlder]
     try:
         net = AutoFocus.from_pth(path_to_pth)
     except:
@@ -44,7 +44,7 @@ def infer(model, image_loader):
 
 def calculate_allan_dev(model, image_loader):
     ds = at.Dataset(data=[v for v in infer(model, tqdm(image_loader))])
-    res = ds.compute("tdev")
+    ds.compute("tdev")
 
     pl = at.Plot()
     pl.plot(ds, errorbars=True, grid=True)
@@ -132,8 +132,8 @@ def predict(
 
     if path_to_images:
         image_loader = ImageLoader.load_image_data(
-                path_to_images, img_size=model.img_size, device=device
-            )
+            path_to_images, img_size=model.img_size, device=device
+        )
         data_path = path_to_images
     elif path_to_zarr:
         image_loader = ImageLoader.load_zarr_data(
@@ -152,7 +152,7 @@ def predict(
         arr[i] = res
 
     if plot:
-        fix,ax = plt.subplots(figsize=(10, 10))
+        fix, ax = plt.subplots(figsize=(10, 10))
         ax.plot(arr)
         ax.set_ylim([-20, 20])
         ax.set_title(f"{data_path.name}\n{path_to_pth.parent.name}")
