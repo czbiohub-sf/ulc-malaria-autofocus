@@ -294,7 +294,7 @@ def get_dataloader(
 
     d = dict()
     num_workers = (
-        num_workers if num_workers is not None else min(max(mp.cpu_count() - 1, 4), 16)
+        num_workers if num_workers is not None else min(max(mp.cpu_count() - 1, 4), 32)
     )
     for designation, dataset in split_datasets.items():
         augmentations = (
