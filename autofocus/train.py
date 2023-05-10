@@ -183,7 +183,7 @@ def do_training(args):
             "learning_rate": ADAM_LR,
             "epochs": EPOCHS,
             "batch_size": BATCH_SIZE,
-            "weight_decay": 0.05,
+            "weight_decay": 0.10,
             "device": str(device),
             "resize_shape": args.resize,
             "dataset_descriptor_file": args.dataset_descriptor_file,
