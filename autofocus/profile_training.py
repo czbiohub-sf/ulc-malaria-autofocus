@@ -74,8 +74,6 @@ def profile_run(
 
 
 if __name__ == "__main__":
-    set_start_method("spawn")
-
     device = "cuda"  # torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     dataloaders = get_dataloader(
