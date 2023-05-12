@@ -75,4 +75,10 @@ def train_parser(parser=None):
         type=str,
         help="group that the run belongs to (e.g. 'mAP test')",
     )
+    parser.add_argument(
+        "--file-modulus",
+        type=int,
+        default=1,
+        help="take every nth file from the dataset, where n == file-modulus (default 1)",
+    )
     return parser

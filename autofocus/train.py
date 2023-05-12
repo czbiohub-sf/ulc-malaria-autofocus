@@ -35,6 +35,7 @@ def init_dataloaders(config):
         config["dataset_descriptor_file"],
         config["batch_size"],
         img_size=config["resize_shape"],
+        file_sequence_modulus=config["file_modulus"],
     )
 
     test_dataloader = dataloaders["test"]
@@ -186,6 +187,7 @@ def do_training(args):
             "weight_decay": 0.10,
             "device": str(device),
             "resize_shape": args.resize,
+            "file-modulus": args.file_modulus,
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
             "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),

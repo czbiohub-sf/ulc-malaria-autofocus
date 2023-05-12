@@ -7,7 +7,6 @@ import torch
 import torch
 from torch import nn
 from torch.optim import AdamW
-from torch.multiprocessing import set_start_method
 from torch.profiler import profile, ProfilerActivity, record_function
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
