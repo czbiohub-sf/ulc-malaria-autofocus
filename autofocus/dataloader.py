@@ -173,13 +173,13 @@ def read_grayscale(img_path):
 
 def is_valid_file(path: str, file_sequence_modulus: int = 0) -> bool:
     """
-    files have form  stepnum_imgseqnum.png
+    files have form  [sometimes-some-stuff]_stepnum_imgseqnum.png
     want to pick imgs s.t. imgseqnum % file_sequence_modulus == 0
     """
     if Path(path).name.startswith("."): return False
     if file_sequence_modulus == 0: return True
     fname = Path(path).with_suffix("").name
-    sequence_num = int(fname.split("_")[1])
+    sequence_num = int(fname.split("_")[-1])
     return (sequence_num % file_sequence_modulus) == 0
 
 
