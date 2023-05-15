@@ -241,7 +241,7 @@ def split_dataset(
     if len(split_fractions) == 0:
         raise ValueError("must have at least one value for the split!")
     elif len(split_fractions) == 1:
-        if not next(iter(split_fractions)) == 1:
+        if not next(iter(split_fractions.values())) == 1:
             raise ValueError(
                 "when split_fractions has length 1, it must have a value of 1"
             )
@@ -258,7 +258,7 @@ def split_dataset(
     final_dataset_size = {keys[-1]: len(dataset) - sum(dataset_sizes.values())}  # type: ignore
     split_sizes = {**dataset_sizes, **final_dataset_size}
 
-    all_sizes_are_gt_0 = all([sz > 0 for sz in split_sizes.values()])
+    all_sizes_are_gt_0 = all([sz >= 0 for sz in split_sizes.values()])
     split_sizes_eq_dataset_size = sum(split_sizes.values()) == len(dataset)  # type: ignore
     if not (all_sizes_are_gt_0 and split_sizes_eq_dataset_size):
         raise ValueError(
