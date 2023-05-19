@@ -82,9 +82,9 @@ def train(dev):
     ) = init_dataloaders(config)
 
     anneal_period = config["epochs"] * len(train_dataloader)
-    scheduler = CosineAnnealingLR(
-        optimizer, T_max=anneal_period, eta_min=config["learning_rate"] / 10
-    )
+    # scheduler = CosineAnnealingLR(
+    #     optimizer, T_max=anneal_period, eta_min=config["learning_rate"] / 10
+    # )
 
     best_val_loss = 1e10
     global_step = 0
@@ -100,13 +100,13 @@ def train(dev):
             loss = L2(outputs, labels)
             loss.backward()
             optimizer.step()
-            scheduler.step()
+            # scheduler.step()
 
             wandb.log(
                 {
                     "train_loss": loss.item(),
                     "epoch": epoch,
-                    "LR": scheduler.get_last_lr()[0],
+                    # "LR": scheduler.get_last_lr()[0],
                 },
                 commit=False,
                 step=global_step,
@@ -174,7 +174,7 @@ def do_training(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     EPOCHS = 192
-    ADAM_LR = 0.00007564058571387123
+    ADAM_LR = 3e-4
     BATCH_SIZE = 256
 
     wandb.init(
@@ -184,7 +184,7 @@ def do_training(args):
             "learning_rate": ADAM_LR,
             "epochs": EPOCHS,
             "batch_size": BATCH_SIZE,
-            "weight_decay": 0.10,
+            "weight_decay": 0.01,
             "device": str(device),
             "resize_shape": args.resize,
             "file_modulus": args.file_modulus,
