@@ -125,6 +125,7 @@ def predict(
     calc_allan_dev: bool = False,
     plot: bool = False,
     output: Optional[Path] = None,
+    print_output: bool = False,
     device: Union[str, torch.device] = "cpu",
 ) -> Optional[torch.Tensor]:
     model = load_model_for_inference(path_to_pth, device)
@@ -165,9 +166,11 @@ def predict(
     elif output is not None:
         with open(output.with_suffix(".txt"), "w") as f:
             f.write("\n".join(map(str, arr.tolist())))
-    else:
+    elif print_output:
         for r in arr:
             print(r.item())
+    else:
+        return arr
 
 
 if __name__ == "__main__":
@@ -188,5 +191,6 @@ if __name__ == "__main__":
         calc_allan_dev=args.allan_dev,
         plot=args.plot,
         output=args.output_path,
+        print_output=args.print_output,
         device=device,
     )

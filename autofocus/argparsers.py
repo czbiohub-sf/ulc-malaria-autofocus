@@ -30,6 +30,11 @@ def infer_parser(parser=None):
         ),
         default=None,
     )
+    parser.add_argument(
+        "--print-output",
+        action=boolean_action,
+        default=False
+    )
 
     result_options = parser.add_mutually_exclusive_group(required=False)
     result_options.add_argument(
