@@ -157,6 +157,8 @@ def predict(
         ax.plot(arr)
         ax.set_ylim([-20, 20])
         ax.set_title(f"{data_path.name}\n{path_to_pth.parent.name}")
+        ax.set_xlabel("frames")
+        ax.set_ylabel("focus value")
 
         if output is None:
             plt.show()
