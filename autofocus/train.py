@@ -115,8 +115,7 @@ def train(dev):
         val_loss = 0.0
 
         net.eval()
-        for data in validate_dataloader:
-            imgs, labels = data
+        for imgs, labels in validate_dataloader:
             imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
             labels = labels.to(dev, dtype=torch.float, non_blocking=True)
 
@@ -191,6 +190,7 @@ def do_training(args):
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
             "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),
+            "torch.backends.cuda.matmul.allow_tf32": torch.backends.cuda.matmul.allow_tf32
         },
         notes=args.note,
         tags=["v0.0.2"],
