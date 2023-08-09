@@ -178,8 +178,10 @@ def is_valid_file(path: str, file_sequence_modulus: int = 0) -> bool:
     files have form  [sometimes-some-stuff]_stepnum_imgseqnum.png
     want to pick imgs s.t. imgseqnum % file_sequence_modulus == 0
     """
-    if Path(path).name.startswith("."): return False
-    if file_sequence_modulus == 0: return True
+    if Path(path).name.startswith("."):
+        return False
+    if file_sequence_modulus == 0:
+        return True
     fname = Path(path).with_suffix("").name
     sequence_num = int(fname.split("_")[-1])
     return (sequence_num % file_sequence_modulus) == 0
@@ -298,6 +300,7 @@ def get_dataloader(
     num_workers: Optional[int] = None,
     augmentation_split_fraction_name: str = "train",
     file_sequence_modulus: int = 0,
+    color_jitter: bool = False,
 ):
     split_datasets = get_datasets(
         dataset_description_file,
@@ -312,16 +315,16 @@ def get_dataloader(
         num_workers if num_workers is not None else min(max(mp.cpu_count() - 1, 4), 32)
     )
     for designation, dataset in split_datasets.items():
-        augmentations = (
-            Compose(
-                [
-                    RandomHorizontalFlip(0.5),
-                    RandomVerticalFlip(0.5),
-                    ColorJitter(brightness=(0.90, 1.10)),
-                ]
+        ggggs = [
+            RandomHorizontalFlip(0.5),
+            RandomVerticalFlip(0.5),
+        ]
+        if color_jitter:
+            ggggs.append(
+                ColorJitter(brightness=(0.90, 1.10)),
             )
-            if designation == augmentation_split_fraction_name
-            else None
+        augmentations = (
+            Compose(ggggs) if designation == augmentation_split_fraction_name else None
         )
         d[designation] = DataLoader(
             dataset,

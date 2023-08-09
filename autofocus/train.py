@@ -15,8 +15,6 @@ from autofocus.dataloader import get_dataloader
 from pathlib import Path
 from copy import deepcopy
 
-torch.backends.cuda.matmul.allow_tf32 = True
-
 
 def checkpoint_model(model, epoch, optimizer, name, img_size):
     torch.save(
@@ -36,6 +34,7 @@ def init_dataloaders(config):
         config["batch_size"],
         img_size=config["resize_shape"],
         file_sequence_modulus=config["file_modulus"],
+        color_jitter=config["color_jitter"],
     )
 
     test_dataloader = dataloaders["test"]
@@ -176,6 +175,7 @@ def do_training(args):
     ADAM_LR = 3e-4
     BATCH_SIZE = 256
 
+    torch.backends.cuda.matmul.allow_tf32 = args.allow_tf32
     wandb.init(
         project="ulc-malaria-autofocus",
         entity="bioengineering",
@@ -190,7 +190,8 @@ def do_training(args):
             "dataset_descriptor_file": args.dataset_descriptor_file,
             "run group": args.group,
             "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),
-            "torch.backends.cuda.matmul.allow_tf32": torch.backends.cuda.matmul.allow_tf32
+            "torch.backends.cuda.matmul.allow_tf32": torch.backends.cuda.matmul.allow_tf32,
+            "color_jitter": args.color_jitter,
         },
         notes=args.note,
         tags=["v0.0.2"],

@@ -30,11 +30,7 @@ def infer_parser(parser=None):
         ),
         default=None,
     )
-    parser.add_argument(
-        "--print-output",
-        action=boolean_action,
-        default=False
-    )
+    parser.add_argument("--print-output", action=boolean_action, default=False)
 
     result_options = parser.add_mutually_exclusive_group(required=False)
     result_options.add_argument(
@@ -85,5 +81,15 @@ def train_parser(parser=None):
         type=int,
         default=1,
         help="take every nth file from the dataset, where n == file-modulus (default 1)",
+    )
+    parser.add_argument(
+        "--allow-tf32",
+        action=boolean_action,
+        default=False,
+    )
+    parser.add_argument(
+        "--color-jitter",
+        action=boolean_action,
+        default=False,
     )
     return parser
