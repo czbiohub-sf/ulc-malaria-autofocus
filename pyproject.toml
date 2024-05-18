@@ -19,7 +19,10 @@ classifiers = [
 dependencies = [
     "torch",
     "torchvision",
+    "AllanTools",
 ]
 
 [tool.setuptools]
 packages = ["autofocus"]
+
+[tool.pdm]
