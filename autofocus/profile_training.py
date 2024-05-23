@@ -1,10 +1,8 @@
 #! /usr/bin/env python3
 
-
 import sys
 import torch
 
-import torch
 from torch import nn
 from torch.optim import AdamW
 from torch.profiler import profile, ProfilerActivity, record_function

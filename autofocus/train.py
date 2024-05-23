@@ -35,6 +35,7 @@ def init_dataloaders(config):
         img_size=config["resize_shape"],
         file_sequence_modulus=config["file_modulus"],
         color_jitter=config["color_jitter"],
+        random_erasing=config["random_erasing"],
     )
 
     test_dataloader = dataloaders["test"]
@@ -192,6 +193,7 @@ def do_training(args):
             "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),
             "torch.backends.cuda.matmul.allow_tf32": torch.backends.cuda.matmul.allow_tf32,
             "color_jitter": args.color_jitter,
+            "random_erasing": args.random_erasing,
         },
         notes=args.note,
         tags=["v0.0.2"],

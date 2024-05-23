@@ -92,4 +92,10 @@ def train_parser(parser=None):
         action=boolean_action,
         default=False,
     )
+    parser.add_argument(
+        "--random-erasing",
+        action=boolean_action,
+        default=False,
+    )
+
     return parser

@@ -14,7 +14,6 @@ from torchvision.transforms import (
     RandomHorizontalFlip,
     RandomVerticalFlip,
     ColorJitter,
-    RandomRotation,
     RandomErasing,
 )
 
@@ -301,6 +300,7 @@ def get_dataloader(
     augmentation_split_fraction_name: str = "train",
     file_sequence_modulus: int = 0,
     color_jitter: bool = False,
+    random_erasing: bool = False
 ):
     split_datasets = get_datasets(
         dataset_description_file,
@@ -322,6 +322,16 @@ def get_dataloader(
         if color_jitter:
             ggggs.append(
                 ColorJitter(brightness=(0.90, 1.10)),
+            )
+        if random_erasing:
+            ggggs.append(
+                RandomErasing(
+                    p=0.5,
+                    scale=(0.02, 0.33),
+                    ratio=(0.3, 3.3),
+                    value=0,
+                    inplace=False,
+                )
             )
         augmentations = (
             Compose(ggggs) if designation == augmentation_split_fraction_name else None
