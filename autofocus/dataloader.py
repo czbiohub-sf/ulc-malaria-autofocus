@@ -83,8 +83,7 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         return sample, target
 
 
-class InvalidDatasetDescriptionFile(Exception):
-    ...
+class InvalidDatasetDescriptionFile(Exception): ...
 
 
 @dataclass
@@ -172,26 +171,11 @@ def read_grayscale(img_path):
         raise RuntimeError(f"file {img_path} threw: {e}")
 
 
-def is_valid_file(path: str, file_sequence_modulus: int = 0) -> bool:
-    """
-    files have form  [sometimes-some-stuff]_stepnum_imgseqnum.png
-    want to pick imgs s.t. imgseqnum % file_sequence_modulus == 0
-    """
-    if Path(path).name.startswith("."):
-        return False
-    if file_sequence_modulus == 0:
-        return True
-    fname = Path(path).with_suffix("").name
-    sequence_num = int(fname.split("_")[-1])
-    return (sequence_num % file_sequence_modulus) == 0
-
-
 def get_datasets(
     dataset_description_file: str,
     batch_size: int,
     img_size: Tuple[int, int] = (300, 400),
     split_fractions_override: Optional[Dict[str, float]] = None,
-    file_sequence_modulus: int = 0,
 ) -> Dict[str, Dataset]:
     dd = load_dataset_description(dataset_description_file)
 
@@ -209,9 +193,6 @@ def get_datasets(
             root=dataset_desc,
             transform=transforms,
             loader=read_grayscale,
-            is_valid_file=partial(
-                is_valid_file, file_sequence_modulus=file_sequence_modulus
-            ),
         )
         for dataset_desc in dataset_paths
     )
@@ -298,16 +279,14 @@ def get_dataloader(
     split_fractions_override: Optional[Dict[str, float]] = None,
     num_workers: Optional[int] = None,
     augmentation_split_fraction_name: str = "train",
-    file_sequence_modulus: int = 0,
     color_jitter: bool = False,
-    random_erasing: bool = False
+    random_erasing: bool = False,
 ):
     split_datasets = get_datasets(
         dataset_description_file,
         batch_size,
         img_size=img_size,
         split_fractions_override=split_fractions_override,
-        file_sequence_modulus=file_sequence_modulus,
     )
 
     d = dict()

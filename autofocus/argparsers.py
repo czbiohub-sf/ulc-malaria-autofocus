@@ -77,12 +77,6 @@ def train_parser(parser=None):
         help="group that the run belongs to (e.g. 'mAP test')",
     )
     parser.add_argument(
-        "--file-modulus",
-        type=int,
-        default=1,
-        help="take every nth file from the dataset, where n == file-modulus (default 1)",
-    )
-    parser.add_argument(
         "--allow-tf32",
         action=boolean_action,
         default=False,
