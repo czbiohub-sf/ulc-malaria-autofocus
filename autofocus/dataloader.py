@@ -203,7 +203,6 @@ def get_datasets(
                 root=dataset_desc,
                 transform=transforms,
                 loader=read_grayscale,
-                is_valid_file=is_valid_file,
             )
             for dataset_desc in test_dataset_paths
         )

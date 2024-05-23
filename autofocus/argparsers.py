@@ -59,6 +59,12 @@ def train_parser(parser=None):
         help="path to yml dataset descriptor file",
     )
     parser.add_argument(
+        "--lr",
+        type=float,
+        help="learning rate",
+        default=3e-4,
+    )
+    parser.add_argument(
         "--resize",
         type=int,
         nargs=2,

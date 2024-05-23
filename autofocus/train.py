@@ -172,7 +172,6 @@ def do_training(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     EPOCHS = 192
-    ADAM_LR = 3e-4
     BATCH_SIZE = 256
 
     torch.backends.cuda.matmul.allow_tf32 = args.allow_tf32
@@ -180,7 +179,7 @@ def do_training(args):
         project="ulc-malaria-autofocus",
         entity="bioengineering",
         config={
-            "learning_rate": ADAM_LR,
+            "learning_rate": args.lr,
             "epochs": EPOCHS,
             "batch_size": BATCH_SIZE,
             "weight_decay": 0.01,
