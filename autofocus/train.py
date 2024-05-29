@@ -166,7 +166,7 @@ def do_training(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     EPOCHS = 192
-    BATCH_SIZE = 256
+    BATCH_SIZE = 128
 
     torch.backends.cuda.matmul.allow_tf32 = args.allow_tf32
     wandb.init(
@@ -194,6 +194,8 @@ def do_training(args):
 
 
 if __name__ == "__main__":
+    torch.backends.cudnn.enabled = True
+
     parser = train_parser()
     args = parser.parse_args()
 
