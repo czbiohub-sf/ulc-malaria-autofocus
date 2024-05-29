@@ -27,7 +27,7 @@ def to_numpy(tensor):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("usage: ./to_onxx.py <your_file.pth> [<output_file_name.onnx>]")
+        print("usage: ./export_model.py <your_file.pth> [<output_file_name.onnx>]")
         sys.exit(1)
 
     pth_filename = Path(sys.argv[1])
