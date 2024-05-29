@@ -83,7 +83,8 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         return sample, target
 
 
-class InvalidDatasetDescriptionFile(Exception): ...
+class InvalidDatasetDescriptionFile(Exception):
+    ...
 
 
 @dataclass
@@ -94,11 +95,7 @@ class DatasetDescription:
 
     def __iter__(self):
         return iter(
-            (
-                self.split_fractions,
-                self.dataset_paths,
-                self.test_dataset_paths,
-            )
+            (self.split_fractions, self.dataset_paths, self.test_dataset_paths,)
         )
 
 
@@ -155,7 +152,7 @@ def load_dataset_description(dataset_description: str) -> DatasetDescription:
 def check_dataset_paths(dataset_paths: List[Path]):
     for dataset_desc in dataset_paths:
         if not (dataset_desc.is_dir()):
-            raise FileNotFoundError("dataset not found")
+            raise FileNotFoundError(f"dataset not found {dataset_desc}")
 
 
 def read_grayscale(img_path):
@@ -184,9 +181,7 @@ def get_datasets(
 
     full_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
         ImageFolderWithLabels(
-            root=dataset_desc,
-            transform=transforms,
-            loader=read_grayscale,
+            root=dataset_desc, transform=transforms, loader=read_grayscale,
         )
         for dataset_desc in dataset_paths
     )
@@ -194,13 +189,12 @@ def get_datasets(
     if test_dataset_paths is not None:
         test_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
             ImageFolderWithLabels(
-                root=dataset_desc,
-                transform=transforms,
-                loader=read_grayscale,
+                root=dataset_desc, transform=transforms, loader=read_grayscale,
             )
             for dataset_desc in test_dataset_paths
         )
-        return {"train": full_dataset, **split_dataset(test_dataset, split_fractions)}
+        assert "train" in split_fractions and "val" in split_fractions
+        return {**split_dataset(full_dataset, split_fractions), "test": test_dataset}
 
     return split_dataset(full_dataset, split_fractions)
 
@@ -292,17 +286,11 @@ def get_dataloader(
             RandomVerticalFlip(0.5),
         ]
         if color_jitter:
-            ggggs.append(
-                ColorJitter(brightness=(0.90, 1.10)),
-            )
+            ggggs.append(ColorJitter(brightness=(0.90, 1.10)),)
         if random_erasing:
             ggggs.append(
                 RandomErasing(
-                    p=0.5,
-                    scale=(0.02, 0.33),
-                    ratio=(0.3, 3.3),
-                    value=0,
-                    inplace=False,
+                    p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False,
                 )
             )
         augmentations = (

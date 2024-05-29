@@ -40,10 +40,7 @@ def infer_parser(parser=None):
         default=False,
     )
     result_options.add_argument(
-        "--plot",
-        help="plot results",
-        action=boolean_action,
-        default=False,
+        "--plot", help="plot results", action=boolean_action, default=False,
     )
 
     return parser
@@ -59,10 +56,7 @@ def train_parser(parser=None):
         help="path to yml dataset descriptor file",
     )
     parser.add_argument(
-        "--lr",
-        type=float,
-        help="learning rate",
-        default=3e-4,
+        "--lr", type=float, help="learning rate", default=3e-4,
     )
     parser.add_argument(
         "--resize",
@@ -78,24 +72,16 @@ def train_parser(parser=None):
         default="",
     )
     parser.add_argument(
-        "--group",
-        type=str,
-        help="group that the run belongs to (e.g. 'mAP test')",
+        "--group", type=str, help="group that the run belongs to (e.g. 'mAP test')",
     )
     parser.add_argument(
-        "--allow-tf32",
-        action=boolean_action,
-        default=False,
+        "--allow-tf32", action=boolean_action, default=False,
     )
     parser.add_argument(
-        "--color-jitter",
-        action=boolean_action,
-        default=False,
+        "--color-jitter", action=boolean_action, default=False,
     )
     parser.add_argument(
-        "--random-erasing",
-        action=boolean_action,
-        default=False,
+        "--random-erasing", action=boolean_action, default=False,
     )
 
     return parser

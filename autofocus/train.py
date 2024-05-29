@@ -123,9 +123,7 @@ def train(dev):
                 loss = L2(outputs, labels)
                 val_loss += loss.item()
 
-        wandb.log(
-            {"val_loss": val_loss / len(validate_dataloader)},
-        )
+        wandb.log({"val_loss": val_loss / len(validate_dataloader)},)
 
         if val_loss < best_val_loss:
             checkpoint_model(
@@ -161,11 +159,7 @@ def train(dev):
             loss = L2(outputs, labels)
             test_loss += loss
 
-    wandb.log(
-        {
-            "test_loss": test_loss / len(test_dataloader),
-        },
-    )
+    wandb.log({"test_loss": test_loss / len(test_dataloader),},)
 
 
 def do_training(args):
