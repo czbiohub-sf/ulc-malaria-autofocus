@@ -131,15 +131,9 @@ def load_dataset_description(dataset_description: str) -> DatasetDescription:
             # when we have 'test_paths', all the data from dataset_paths
             # will be used for training, so we should only have 'test' and
             # 'val' in dataset_split_fractions.
-            if "val" not in split_fractions or "test" not in split_fractions:
+            if "val" not in split_fractions or "train" not in split_fractions:
                 raise InvalidDatasetDescriptionFile(
-                    "'val' and 'test' are required keys for dataset_split_fractions"
-                )
-            if "train" in split_fractions:
-                raise InvalidDatasetDescriptionFile(
-                    "when `test_paths` is present in a dataset descriptor file, 'train' "
-                    "is not a valid key for `dataset_split_fractions`, since we will use "
-                    "all the data from `dataset_paths` for training"
+                    "'val' and 'train' are required keys for dataset_split_fractions"
                 )
         else:
             test_dataset_paths = None
