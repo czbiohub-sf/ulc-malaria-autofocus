@@ -4,9 +4,10 @@ import torch
 import numpy as np
 import multiprocessing as mp
 
+from yogo.data.utils import read_image_robust
+
 from torch import nn
 from torchvision import datasets
-from torchvision.io import read_image, ImageReadMode
 from torch.utils.data import ConcatDataset, DataLoader, random_split, Dataset
 from torchvision.transforms import (
     Compose,
@@ -156,10 +157,7 @@ def check_dataset_paths(dataset_paths: List[Path]):
 
 
 def read_grayscale(img_path):
-    try:
-        return read_image(str(img_path), ImageReadMode.GRAY)
-    except RuntimeError as e:
-        raise RuntimeError(f"file {img_path} threw: {e}")
+    return read_image_robust(img_path, rgb=False)
 
 
 def get_datasets(
@@ -250,7 +248,7 @@ def split_dataset(
 
 
 def collate_batch(batch, transforms: Optional[nn.Module] = None):
-    inputs, labels = zip(*batch)
+    inputs, labels = zip(*[pair for pair in batch if pair is not None])
     batched_inputs = torch.stack(inputs)
     batched_labels = torch.tensor(labels)
     if transforms is not None:
