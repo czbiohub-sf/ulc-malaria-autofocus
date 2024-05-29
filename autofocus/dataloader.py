@@ -39,7 +39,7 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     """
 
     def __init__(self, *args, **kwargs):
-        self.valid_classes = list(range(-20, 21))
+        self.valid_classes = list(range(-10, 11))
 
         super().__init__(*args, **kwargs)
 
