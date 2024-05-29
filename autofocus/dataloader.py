@@ -76,6 +76,8 @@ class ImageFolderWithLabels(datasets.ImageFolder):
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         img_path = str(self.paths[index], encoding="utf-8")
         sample = self.loader(img_path)
+        if sample is None:
+            return None
         target = self.targets[index]
         if self.transform is not None:
             sample = self.transform(sample)
@@ -126,9 +128,6 @@ def load_dataset_description(dataset_description: str) -> DatasetDescription:
             test_dataset_paths = [Path(d) for d in yaml_data["test_paths"].values()]
             check_dataset_paths(test_dataset_paths)
 
-            # when we have 'test_paths', all the data from dataset_paths
-            # will be used for training, so we should only have 'test' and
-            # 'val' in dataset_split_fractions.
             if "val" not in split_fractions or "train" not in split_fractions:
                 raise InvalidDatasetDescriptionFile(
                     "'val' and 'train' are required keys for dataset_split_fractions"
@@ -191,7 +190,9 @@ def get_datasets(
             )
             for dataset_desc in test_dataset_paths
         )
-        assert "train" in split_fractions and "val" in split_fractions
+        assert (
+            "train" in split_fractions and "val" in split_fractions
+        ), "should've check this earlier, fix the code"
         return {**split_dataset(full_dataset, split_fractions), "test": test_dataset}
 
     return split_dataset(full_dataset, split_fractions)
@@ -249,6 +250,10 @@ def split_dataset(
 
 def collate_batch(batch, transforms: Optional[nn.Module] = None):
     inputs, labels = zip(*[pair for pair in batch if pair is not None])
+    inputs = list(inputs)
+    labels = list(labels)
+    if len(inputs) == 0:
+        raise ValueError("cannot collate an empty batch")
     batched_inputs = torch.stack(inputs)
     batched_labels = torch.tensor(labels)
     if transforms is not None:
