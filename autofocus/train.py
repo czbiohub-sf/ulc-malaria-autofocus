@@ -88,6 +88,7 @@ def train(dev):
     best_val_loss = 1e10
     global_step = 0
     for epoch in range(config["epochs"]):
+        net.train()
         for i, (imgs, labels) in enumerate(train_dataloader, 1):
             global_step += 1
             imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
@@ -139,8 +140,6 @@ def train(dev):
             net, epoch, optimizer, model_save_dir / "latest.pth", config["resize_shape"]
         )
 
-        net.train()
-
     # load best!
     net = AutoFocus.from_pth(model_save_dir / "best.pth")
     net = net.to(dev)
@@ -163,7 +162,7 @@ def train(dev):
 
 
 def do_training(args):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device('cuda')
 
     EPOCHS = 192
     BATCH_SIZE = 128
