@@ -34,7 +34,7 @@ class AutoFocus(nn.Module):
                 nn.Linear(1850, 512),
                 nn.Dropout(p=0.3),
                 nn.LeakyReLU(),
-                nn.Linear(512, 1),
+                nn.Linear(512, 2),
             ),
         )
 
@@ -62,7 +62,8 @@ class AutoFocus(nn.Module):
         return model
 
     def forward(self, x):
-        return self.model(x)
+        out = self.model(x)
+        return torch.cat([out[:, 0], torch.sigmoid(out[:, 1])])
 
 
 class AutoFocusOlder(nn.Module):

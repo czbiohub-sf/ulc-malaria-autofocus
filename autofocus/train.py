@@ -60,13 +60,31 @@ def init_dataloaders(config):
     return model_save_dir, train_dataloader, validate_dataloader, test_dataloader
 
 
+class AutoFocusWithAlarmLoss(nn.Module):
+    def __init__(self, oof_thresh=15):
+        super().__init__()
+        self.L2 = nn.MSELoss(reduction="none")
+        self.oof_alarm = nn.BCELoss(reduction="none")
+
+    def forward(self, preds, labels):
+        oof_mask = labels[:, 1].abs() >= 15
+        l2_loss = self.L2((1 - oof_mask) * preds[:, 0], (1 - oof_mask) * labels).mean()
+        oof_loss = self.oof_alarm(
+            oof_mask * preds[:, 1], oof_mask * labels[:, 1]
+        ).mean()
+        return (
+            l2_loss + oof_loss,
+            {"l2_loss": l2_loss.item(), "oof_loss": oof_loss.item()},
+        )
+
+
 def train(dev):
     config = wandb.config
 
     net = AutoFocus().to(dev)
     net = torch.jit.script(net)
 
-    L2 = nn.MSELoss().to(dev)
+    af_loss = AutoFocusWithAlarmLoss()
     optimizer = AdamW(
         net.parameters(),
         lr=config["learning_rate"],
@@ -97,7 +115,7 @@ def train(dev):
             optimizer.zero_grad(set_to_none=True)
 
             outputs = net(imgs).view(-1)
-            loss = L2(outputs, labels)
+            loss, loss_components = af_loss(outputs, labels)
             loss.backward()
             optimizer.step()
             scheduler.step()
@@ -107,12 +125,15 @@ def train(dev):
                     "train_loss": loss.item(),
                     "epoch": epoch,
                     "LR": scheduler.get_last_lr()[0],
+                    **loss_components,
                 },
                 commit=False,
                 step=global_step,
             )
 
         val_loss = 0.0
+        val_l2_loss = 0.0
+        val_oof_loss = 0.0
 
         net.eval()
         for imgs, labels in validate_dataloader:
@@ -121,10 +142,18 @@ def train(dev):
 
             with torch.no_grad():
                 outputs = net(imgs).view(-1)
-                loss = L2(outputs, labels)
+                loss, loss_components = af_loss(outputs, labels)
                 val_loss += loss.item()
+                val_l2_loss += loss_components["l2_loss"]
+                val_oof_loss += loss_components["oof_loss"]
 
-        wandb.log({"val_loss": val_loss / len(validate_dataloader)},)
+        wandb.log(
+            {
+                "val_loss": val_loss / len(validate_dataloader),
+                "val_l2_loss": val_l2_loss / len(validate_dataloader),
+                "val_oof_loss": val_oof_loss / len(validate_dataloader),
+            },
+        )
 
         if val_loss < best_val_loss:
             checkpoint_model(
@@ -147,7 +176,10 @@ def train(dev):
 
     print("done training")
     net.eval()
-    test_loss = torch.tensor(0.0, device=dev)
+    test_loss = 0.0
+    test_l2_loss = 0.0
+    test_oof_loss = 0.0
+
     for data in test_dataloader:
         imgs, labels = data
         imgs = imgs.to(dev, dtype=torch.float, non_blocking=True)
@@ -155,14 +187,22 @@ def train(dev):
 
         with torch.no_grad():
             outputs = net(imgs).view(-1)
-            loss = L2(outputs, labels)
-            test_loss += loss
+            loss, loss_components = af_loss(outputs, labels)
+            test_loss += loss.item()
+            test_l2_loss += loss_components["l2_loss"]
+            test_oof_loss += loss_components["oof_loss"]
 
-    wandb.log({"test_loss": test_loss / len(test_dataloader),},)
+    wandb.log(
+        {
+            "test_loss": test_loss / len(test_dataloader),
+            "test_l2_loss": test_l2_loss / len(test_dataloader),
+            "test_oof_loss": test_oof_loss / len(test_dataloader),
+        },
+    )
 
 
 def do_training(args):
-    device = torch.device('cuda')
+    device = torch.device("cuda")
 
     EPOCHS = 192
     BATCH_SIZE = 128
