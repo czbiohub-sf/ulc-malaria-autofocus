@@ -11,6 +11,7 @@ from torchvision import datasets
 from torch.utils.data import ConcatDataset, DataLoader, random_split, Dataset
 from torchvision.transforms import (
     Compose,
+    CenterCrop,
     Resize,
     RandomHorizontalFlip,
     RandomVerticalFlip,
@@ -171,7 +172,7 @@ def get_datasets(
     dataset_paths = dd.dataset_paths
     test_dataset_paths = dd.test_dataset_paths
 
-    transforms = Resize(img_size, antialias=True)
+    transforms = CenterCrop(img_size)
 
     if split_fractions_override is not None:
         split_fractions = split_fractions_override
