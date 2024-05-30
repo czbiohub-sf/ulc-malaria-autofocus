@@ -30,11 +30,7 @@ def checkpoint_model(model, epoch, optimizer, name, img_size):
 
 def init_dataloaders(config):
     dataloaders = get_dataloader(
-        config["dataset_descriptor_file"],
-        config["batch_size"],
-        img_size=config["resize_shape"],
-        color_jitter=config["color_jitter"],
-        random_erasing=config["random_erasing"],
+        config["dataset_descriptor_file"], config["batch_size"],
     )
 
     test_dataloader = dataloaders["test"]
@@ -162,12 +158,12 @@ def train(dev):
 
 
 def do_training(args):
-    device = torch.device('cuda')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     EPOCHS = 192
     BATCH_SIZE = 128
 
-    torch.backends.cuda.matmul.allow_tf32 = args.allow_tf32
+    torch.backends.cuda.matmul.allow_tf32 = True
     wandb.init(
         project="ulc-malaria-autofocus",
         entity="bioengineering",
@@ -177,13 +173,8 @@ def do_training(args):
             "batch_size": BATCH_SIZE,
             "weight_decay": 0.01,
             "device": str(device),
-            "resize_shape": args.resize,
             "dataset_descriptor_file": args.dataset_descriptor_file,
-            "run group": args.group,
             "slurm-job-id": os.getenv("SLURM_JOB_ID", default=None),
-            "torch.backends.cuda.matmul.allow_tf32": torch.backends.cuda.matmul.allow_tf32,
-            "color_jitter": args.color_jitter,
-            "random_erasing": args.random_erasing,
         },
         notes=args.note,
         tags=["v0.0.2"],

@@ -14,8 +14,6 @@ from torchvision.transforms import (
     Resize,
     RandomHorizontalFlip,
     RandomVerticalFlip,
-    ColorJitter,
-    RandomErasing,
 )
 
 from pathlib import Path
@@ -269,8 +267,6 @@ def get_dataloader(
     split_fractions_override: Optional[Dict[str, float]] = None,
     num_workers: Optional[int] = None,
     augmentation_split_fraction_name: str = "train",
-    color_jitter: bool = False,
-    random_erasing: bool = False,
 ):
     split_datasets = get_datasets(
         dataset_description_file,
@@ -284,21 +280,6 @@ def get_dataloader(
         num_workers if num_workers is not None else min(max(mp.cpu_count() - 1, 4), 32)
     )
     for designation, dataset in split_datasets.items():
-        ggggs = [
-            RandomHorizontalFlip(0.5),
-            RandomVerticalFlip(0.5),
-        ]
-        if color_jitter:
-            ggggs.append(ColorJitter(brightness=(0.90, 1.10)),)
-        if random_erasing:
-            ggggs.append(
-                RandomErasing(
-                    p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False,
-                )
-            )
-        augmentations = (
-            Compose(ggggs) if designation == augmentation_split_fraction_name else None
-        )
         d[designation] = DataLoader(
             dataset,
             shuffle=True,
@@ -308,6 +289,11 @@ def get_dataloader(
             pin_memory=num_workers > 0,
             persistent_workers=num_workers > 0,
             generator=torch.Generator().manual_seed(101010),
-            collate_fn=partial(collate_batch, transforms=augmentations),
+            collate_fn=partial(
+                collate_batch,
+                transforms=Compose(
+                    [RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5),]
+                ),
+            ),
         )
     return d

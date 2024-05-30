@@ -59,29 +59,9 @@ def train_parser(parser=None):
         "--lr", type=float, help="learning rate", default=3e-4,
     )
     parser.add_argument(
-        "--resize",
-        type=int,
-        nargs=2,
-        default=(300, 400),
-        help="resize image to these dimensions. e.g. '-r 300 400' to resize to width=300, height=400 (default 300 400)",
-    )
-    parser.add_argument(
         "--note",
         type=str,
         help="note for the run (e.g. 'was run on a TI-82')",
         default="",
     )
-    parser.add_argument(
-        "--group", type=str, help="group that the run belongs to (e.g. 'mAP test')",
-    )
-    parser.add_argument(
-        "--allow-tf32", action=boolean_action, default=False,
-    )
-    parser.add_argument(
-        "--color-jitter", action=boolean_action, default=False,
-    )
-    parser.add_argument(
-        "--random-erasing", action=boolean_action, default=False,
-    )
-
     return parser
