@@ -68,8 +68,8 @@ class AutoFocusWithAlarmLoss(nn.Module):
 
     def forward(self, preds, labels):
         oof_mask = labels.abs() >= 15
-        l2_loss = self.L2((1 - oof_mask) * preds[:, 0], (1 - oof_mask) * labels).mean()
-        oof_loss = self.oof_alarm(oof_mask * preds[:, 1], oof_mask * labels).mean()
+        l2_loss = self.L2(preds[~oof_mask, 0], labels[~oof_mask]).mean()
+        oof_loss = self.oof_alarm(preds[oof_mask, 1], labels[oof_mask]).mean()
         return (
             l2_loss + oof_loss,
             {"l2_loss": l2_loss.item(), "oof_loss": oof_loss.item()},
