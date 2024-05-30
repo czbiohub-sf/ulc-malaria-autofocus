@@ -68,8 +68,8 @@ class AutoFocusWithAlarmLoss(nn.Module):
 
     def forward(self, preds, labels):
         oof_mask = labels.abs() >= 15
-        l2_loss = self.L2(preds[0, ~oof_mask], labels[~oof_mask]).mean()
-        oof_loss = self.oof_alarm(preds[1, :], oof_mask.float()).sum()
+        l2_loss = self.L2(preds[~oof_mask, 0], labels[~oof_mask]).mean()
+        oof_loss = self.oof_alarm(preds[:, 1], oof_mask.float()).sum()
         return (
             l2_loss + oof_loss,
             {"l2_loss": l2_loss.item(), "oof_loss": oof_loss.float()},
@@ -112,7 +112,7 @@ def train(dev):
 
             optimizer.zero_grad(set_to_none=True)
 
-            outputs = net(imgs).view(-1)
+            outputs = net(imgs)
             loss, loss_components = af_loss(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -139,7 +139,7 @@ def train(dev):
             labels = labels.to(dev, dtype=torch.float, non_blocking=True)
 
             with torch.no_grad():
-                outputs = net(imgs).view(-1)
+                outputs = net(imgs)
                 loss, loss_components = af_loss(outputs, labels)
                 val_loss += loss.item()
                 val_l2_loss += loss_components["l2_loss"]
@@ -184,7 +184,7 @@ def train(dev):
         labels = labels.to(dev, dtype=torch.float, non_blocking=True)
 
         with torch.no_grad():
-            outputs = net(imgs).view(-1)
+            outputs = net(imgs)
             loss, loss_components = af_loss(outputs, labels)
             test_loss += loss.item()
             test_l2_loss += loss_components["l2_loss"]
@@ -200,7 +200,7 @@ def train(dev):
 
 
 def do_training(args):
-    device = torch.device("cuda")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     EPOCHS = 192
     BATCH_SIZE = 128
