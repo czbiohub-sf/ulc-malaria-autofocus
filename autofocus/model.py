@@ -63,7 +63,7 @@ class AutoFocus(nn.Module):
 
     def forward(self, x):
         out = self.model(x)
-        return torch.cat([out[:, 0], torch.sigmoid(out[:, 1])])
+        return torch.stack([out[:, 0], torch.sigmoid(out[:, 1])])
 
 
 class AutoFocusOlder(nn.Module):
