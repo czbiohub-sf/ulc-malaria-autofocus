@@ -22,7 +22,6 @@ def checkpoint_model(model, epoch, optimizer, name, img_size):
             "epoch": epoch,
             "model_state_dict": deepcopy(model.state_dict()),
             "optimizer_state_dict": deepcopy(optimizer.state_dict()),
-            "img_size": img_size,
         },
         str(name),
     )
