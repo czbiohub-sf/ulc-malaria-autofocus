@@ -30,7 +30,8 @@ def checkpoint_model(model, epoch, optimizer, name, img_size):
 
 def init_dataloaders(config):
     dataloaders = get_dataloader(
-        config["dataset_descriptor_file"], config["batch_size"],
+        config["dataset_descriptor_file"],
+        config["batch_size"],
     )
 
     test_dataloader = dataloaders["test"]
@@ -120,7 +121,9 @@ def train(dev):
                 loss = L2(outputs, labels)
                 val_loss += loss.item()
 
-        wandb.log({"val_loss": val_loss / len(validate_dataloader)},)
+        wandb.log(
+            {"val_loss": val_loss / len(validate_dataloader)},
+        )
 
         if val_loss < best_val_loss:
             checkpoint_model(
@@ -128,13 +131,10 @@ def train(dev):
                 epoch,
                 optimizer,
                 model_save_dir / "best.pth",
-                config["resize_shape"],
             )
             best_val_loss = val_loss
 
-        checkpoint_model(
-            net, epoch, optimizer, model_save_dir / "latest.pth", config["resize_shape"]
-        )
+        checkpoint_model(net, epoch, optimizer, model_save_dir / "latest.pth")
 
     # load best!
     net = AutoFocus.from_pth(model_save_dir / "best.pth")
@@ -154,7 +154,11 @@ def train(dev):
             loss = L2(outputs, labels)
             test_loss += loss
 
-    wandb.log({"test_loss": test_loss / len(test_dataloader),},)
+    wandb.log(
+        {
+            "test_loss": test_loss / len(test_dataloader),
+        },
+    )
 
 
 def do_training(args):
