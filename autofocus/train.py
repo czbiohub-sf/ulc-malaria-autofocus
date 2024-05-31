@@ -16,7 +16,7 @@ from pathlib import Path
 from copy import deepcopy
 
 
-def checkpoint_model(model, epoch, optimizer, name, img_size):
+def checkpoint_model(model, epoch, optimizer, name):
     torch.save(
         {
             "epoch": epoch,
