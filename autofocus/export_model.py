@@ -86,8 +86,7 @@ if __name__ == "__main__":
             onnx_filename,
             "--output_dir",
             str(onnx_path.parent),
-            "--data_type",
-            "FP16",
+            "--compress_to_fp16",
         ]
     )
 
