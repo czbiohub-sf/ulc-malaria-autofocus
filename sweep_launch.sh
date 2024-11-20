@@ -12,7 +12,7 @@
 env | grep "^SLURM" | sort
 
 echo
-echo "starting yogo training..."
+echo "starting ulc-malaria-autofocus training..."
 echo
 
 nvidia-smi
