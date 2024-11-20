@@ -1,5 +1,13 @@
-# Single-Shot Auto Focus (SSAF) for the ULC Malaria Scope
+# Single-Shot Auto Focus (SSAF) for the Remoscope
+This is work done by the Bioengineering team at the CZ Biohub SF, a non-profit research institution.
+![CZ Biohub SF logo](images/CZ-Biohub-SF-Color-RGB.png)
 
+This repository houses a simple CNN used for running single-shot autofocus on the Remoscope (preprint here: https://www.medrxiv.org/content/10.1101/2024.11.12.24317184v1).
+On Remoscope, we flow whole blood through a flow cell whose thickness is such that the red blood cells flow in a monolayer. We want to be able to image continuously without needing to pause
+and acquire Z-stacks to re-focus (in the case of focal drift caused by mechanical vibrations or thermal effects).
+
+To keep the sample in focus throughout the run, we have trained a CNN to recognize focus offsets based on the images (there is an asymmetry in the focus stack due to non-idealities in the optics which
+causes the images to look slightly different when above or below focus). The model outputs the number of steps away from focus and the direction (i.e +3 steps, -5 steps, etc.).
 
 ## Installation
 
