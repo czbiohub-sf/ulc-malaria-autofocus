@@ -96,7 +96,11 @@ class DatasetDescription:
 
     def __iter__(self):
         return iter(
-            (self.split_fractions, self.dataset_paths, self.test_dataset_paths,)
+            (
+                self.split_fractions,
+                self.dataset_paths,
+                self.test_dataset_paths,
+            )
         )
 
 
@@ -176,7 +180,9 @@ def get_datasets(
 
     full_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
         ImageFolderWithLabels(
-            root=dataset_desc, transform=transforms, loader=read_grayscale,
+            root=dataset_desc,
+            transform=transforms,
+            loader=read_grayscale,
         )
         for dataset_desc in dataset_paths
     )
@@ -184,7 +190,9 @@ def get_datasets(
     if test_dataset_paths is not None:
         test_dataset: ConcatDataset[ImageFolderWithLabels] = ConcatDataset(
             ImageFolderWithLabels(
-                root=dataset_desc, transform=transforms, loader=read_grayscale,
+                root=dataset_desc,
+                transform=transforms,
+                loader=read_grayscale,
             )
             for dataset_desc in test_dataset_paths
         )
@@ -232,8 +240,8 @@ def split_dataset(
             f"full dataset size is {len(dataset)}"  # type: ignore
         )
 
-    # YUCK! Want a map from the dataset designation to teh set itself, but "random_split" takes a list
-    # of lengths of dataset. So we do this verbose rigamarol.
+    # Need a map from the dataset designation to the set itself, but "random_split" takes a list
+    # of lengths of dataset. So unfortunately, we resort to this verbose parsing.
     return dict(
         zip(
             keys,
@@ -292,7 +300,10 @@ def get_dataloader(
             collate_fn=partial(
                 collate_batch,
                 transforms=Compose(
-                    [RandomHorizontalFlip(0.5), RandomVerticalFlip(0.5),]
+                    [
+                        RandomHorizontalFlip(0.5),
+                        RandomVerticalFlip(0.5),
+                    ]
                 ),
             ),
         )
