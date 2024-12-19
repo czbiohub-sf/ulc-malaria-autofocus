@@ -11,7 +11,7 @@ causes the images to look slightly different when above or below focus). The mod
 
 ## Installation
 
-These instructions are for installation onto the BRUNO HPC at the Chan-Zuckerberg Biohub.
+These instructions are for installation onto the BRUNO HPC at the Chan Zuckerberg Biohub San Francisco.
 
 Create (or activate) a conda environment if you have not already.
 
@@ -22,8 +22,6 @@ Install PyTorch and Torchvision from [here](https://pytorch.org/get-started/loca
 - Conda
 - Python
 - Cuda (most recent, or the Cuda version that the HPC uses)
-
-and the command should look something like
 
 ```console
 conda install pytorch torchvision torchaudio cudatoolkit=11.6 -c pytorch -c conda-forge
@@ -41,7 +39,7 @@ And for converting to the intermediate representation,
 pip3 install openvino-dev
 ```
 
-I most likely missed a package or two, as I am writing this post-hoc. If you find that you need a package that I have  not included here, please create an issue!
+If you find that you need a package that is not included here, please create an issue!
 
 
 ## Training
@@ -64,11 +62,11 @@ We need to convert your `.pth` file to `.onnx` and then to the Intel intermediat
 which should create a `.onnx` file, a `.xml` file, and a `.bin` file. The `.bin` and `.xml` files are the intermediate representation of your model. You can then `rsync` or `scp` the `.bin` and `.xml` files from wherever you need them!
 
 
-## Low Signal-to-noise ratio preparation of OpenVino
+## Tips for preparing OpenVino
 
-_I wish I knew about [this link](https://stackoverflow.com/collectives/intel/articles/72141365/how-to-convert-pytorch-model-and-run-it-with-openvino) before hand_
+_[this link has helpful information](https://stackoverflow.com/collectives/intel/articles/72141365/how-to-convert-pytorch-model-and-run-it-with-openvino)_
 
-__vaguely following https://github.com/openvinotoolkit/openvino/wiki/CMakeOptionsForCustomCompilation#building-with-custom-opencv__
+_[also see here](https://github.com/openvinotoolkit/openvino/wiki/CMakeOptionsForCustomCompilation#building-with-custom-opencv)_
 
 After installing opencv and cmake, you can run
 
@@ -95,19 +93,15 @@ cmake \
   && make --jobs=$(nproc --all)
 ```
 
-And we have to add `openvino` to the `PYTHONPATH` variable. Add this to `~/.bashrc`:
+And you have to add `openvino` to the `PYTHONPATH` variable. Add this to `~/.bashrc`:
 ```console
 export PYTHONPATH=/home/pi/openvino/bin/armv7l/Release/lib/python_api/python3.7:$PYTHONPATH
 ```
 
-
 ## OpenVino Performance Optimizations!
 
-### Benchmark App
+[OpenVino benchmark app](https://docs.openvino.ai/latest/openvino_inference_engine_tools_benchmark_tool_README.html#run-the-tool)
 
-[here it is](https://docs.openvino.ai/latest/openvino_inference_engine_tools_benchmark_tool_README.html#run-the-tool)
-
-I don't really know what it is, but prob worth looking into?
 
 ### Measuring Performance
 
@@ -128,27 +122,3 @@ I don't really know what it is, but prob worth looking into?
 [Runtime Inference Options](https://docs.openvino.ai/latest/openvino_docs_deployment_optimization_guide_dldt_optimization_guide.html#doxid-openvino-docs-deployment-optimization-guide-dldt-optimization-guide)
 
 [Model Caching or Compiling](https://docs.openvino.ai/latest/openvino_docs_OV_UG_Model_caching_overview.html#doxid-openvino-docs-o-v-u-g-model-caching-overview)
-
-
-### Half Precision
-
-Would love to run inference in half precision. Training seems to go WAY faster, and presumably inference would as well. The only issue is that converting to ONNX (via `to_onnx.py`) seems to fail. There are either malloc "memory corruption" when opening the model for inference, or issues or some issues with the export. A valid ONNX model is created, though (via the `check_model` call on line 59). When attempting to export on CPU, we get `"RuntimeError: "slow_conv2d_cpu" not implemented for 'Half'"`. Ideas to move forward:
-
-- Train on half precision, run inference on single precision
-  - we really would love it the other way around, though :grimacing:
-- What if we jump directly to the IR and run it on the NCS? I.e. don't check model outputs
-- use Microsoft's [onnxconverter-common](https://github.com/microsoft/onnxconverter-common), which should be able to take a fp32 model and convert it to fp16
-  - This is probably the best! Train in fp16, convert to onnx in fp32, convert onnx to fp16, convert fp16 onnx to IR
-  - If so, I should write a `build_model.sh` type script
-
-
-#### `backward()` is blocking?
-
-It seems like, when on CPU, the call to `backward()` blocks, regardless if it is through `loss.backward()` or `scaler.scale(loss).backward()`. GPU is fine, and I think that it is only when `scaler = torch.cuda.amp.GradScaler()` is present.
-
-
-### Pruning
-
-smaller model == faster model
-
-https://jacobgil.github.io/deeplearning/pruning-deep-learning
