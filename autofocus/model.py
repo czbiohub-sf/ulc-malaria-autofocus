@@ -40,7 +40,9 @@ class AutoFocus(nn.Module):
 
         self.model.apply(self.init_network_weights)
 
-        self.img_size = (300, 400)  # default
+        self.center_crop_perc = (
+            0.6  # Percentage of the image height/width to crop from the center
+        )
 
     @staticmethod
     def init_network_weights(module: nn.Module):

@@ -1,25 +1,27 @@
+from dataclasses import dataclass
+from functools import partial
+import multiprocessing as mp
+from pathlib import Path
+from time import sleep
+from typing import Dict, List, Optional, Tuple, Union
+import warnings
 import yaml
-import torch
 
 import numpy as np
-import multiprocessing as mp
-
-from yogo.data.utils import read_image_robust
-
+import torch
 from torch import nn
 from torchvision import datasets
 from torch.utils.data import ConcatDataset, DataLoader, random_split, Dataset
 from torchvision.transforms import (
     Compose,
-    Resize,
+    CenterCrop,
     RandomHorizontalFlip,
     RandomVerticalFlip,
 )
+from torchvision.io import read_image as read_image_torch, ImageReadMode
 
-from pathlib import Path
-from functools import partial
-from dataclasses import dataclass
-from typing import List, Dict, Union, Tuple, Optional
+
+IMG_H, IMG_W = 772, 1032
 
 
 def _dict_get_and_cast_to_int(dct: Dict[int, int], idx: int) -> torch.Tensor:
@@ -84,8 +86,7 @@ class ImageFolderWithLabels(datasets.ImageFolder):
         return sample, target
 
 
-class InvalidDatasetDescriptionFile(Exception):
-    ...
+class InvalidDatasetDescriptionFile(Exception): ...
 
 
 @dataclass
@@ -158,13 +159,37 @@ def check_dataset_paths(dataset_paths: List[Path]):
 
 
 def read_grayscale(img_path):
+    def read_image_robust(
+        img_path: Union[str, Path],
+        retries: int = 3,
+        min_duration: float = 0.1,
+        rgb: bool = False,
+    ) -> Optional[torch.Tensor]:
+        """
+        Attempts to read an image file with retry logic.
+
+        This function tries to read an image with a specified number of retries. If all attempts fail,
+        it logs a warning and returns None.
+        """
+        img_mode = ImageReadMode.RGB if rgb else ImageReadMode.GRAY
+        for i in range(retries):
+            try:
+                return read_image_torch(str(img_path), img_mode)
+            except Exception as e:
+                warnings.warn(f"file {img_path} threw: {e}")
+                if i == retries - 1:
+                    warnings.warn(f"all attempts to read {img_path} failed")
+                    break
+                sleep(min_duration * (2**retries))
+        return None
+
     return read_image_robust(img_path, rgb=False)
 
 
 def get_datasets(
     dataset_description_file: str,
     batch_size: int,
-    img_size: Tuple[int, int] = (300, 400),
+    img_center_crop_perc: float = 0.6,
     split_fractions_override: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Dataset]:
     dd = load_dataset_description(dataset_description_file)
@@ -173,7 +198,9 @@ def get_datasets(
     dataset_paths = dd.dataset_paths
     test_dataset_paths = dd.test_dataset_paths
 
-    transforms = Resize(img_size, antialias=True)
+    center_crop_h = int(img_center_crop_perc * IMG_H)
+    center_crop_w = int(img_center_crop_perc * IMG_W)
+    transforms = CenterCrop((center_crop_h, center_crop_w))
 
     if split_fractions_override is not None:
         split_fractions = split_fractions_override
@@ -227,7 +254,8 @@ def split_dataset(
     # very annoying type hint here - `Dataset` doesn't necessarily have `__len__`,
     # so we manually check it. But I am not sure that you can cast to Sizedj so mypy complains
     dataset_sizes = {
-        k: round(split_fractions[k] * len(dataset)) for k in keys[:-1]  # type: ignore
+        k: round(split_fractions[k] * len(dataset))
+        for k in keys[:-1]  # type: ignore
     }
     final_dataset_size = {keys[-1]: len(dataset) - sum(dataset_sizes.values())}  # type: ignore
     split_sizes = {**dataset_sizes, **final_dataset_size}
@@ -270,7 +298,7 @@ def collate_batch(batch, transforms: Optional[nn.Module] = None):
 def get_dataloader(
     dataset_description_file: str,
     batch_size: int,
-    img_size: Tuple[int, int] = (300, 400),
+    img_center_crop_perc: float = 0.6,
     device: Union[str, torch.device] = "cpu",
     split_fractions_override: Optional[Dict[str, float]] = None,
     num_workers: Optional[int] = None,
@@ -279,7 +307,7 @@ def get_dataloader(
     split_datasets = get_datasets(
         dataset_description_file,
         batch_size,
-        img_size=img_size,
+        img_center_crop_perc=img_center_crop_perc,
         split_fractions_override=split_fractions_override,
     )
 
