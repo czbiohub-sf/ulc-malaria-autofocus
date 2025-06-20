@@ -40,7 +40,24 @@ def infer_parser(parser=None):
         default=False,
     )
     result_options.add_argument(
-        "--plot", help="plot results", action=boolean_action, default=False,
+        "--plot",
+        help="plot results",
+        action=boolean_action,
+        default=False,
+    )
+    result_options.add_argument(
+        "--overlay",
+        help="overlay results on images",
+        action=boolean_action,
+        default=False,
+    )
+
+    test_training_data = parser.add_mutually_exclusive_group(required=False)
+    test_training_data.add_argument(
+        "--test-training-data",
+        help="test the training data",
+        action=boolean_action,
+        default=False,
     )
 
     return parser
@@ -56,7 +73,10 @@ def train_parser(parser=None):
         help="path to yml dataset descriptor file",
     )
     parser.add_argument(
-        "--lr", type=float, help="learning rate", default=3e-4,
+        "--lr",
+        type=float,
+        help="learning rate",
+        default=3e-4,
     )
     parser.add_argument(
         "--note",
