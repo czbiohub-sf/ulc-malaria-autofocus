@@ -1,0 +1,1 @@
+CENTER_CROP_PERC = 0.6

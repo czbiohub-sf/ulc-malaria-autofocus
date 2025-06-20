@@ -15,6 +15,7 @@ import zarr
 from autofocus.model import AutoFocus, AutoFocusOlder
 from autofocus.argparsers import infer_parser
 from autofocus.dataloader import read_grayscale, IMG_H, IMG_W
+from autofocus.constants import CENTER_CROP_PERC
 
 
 def choose_device():
@@ -73,12 +74,12 @@ class ImageLoader:
     def load_image_data(
         cls,
         path_to_data: Union[str, Path],
-        center_crop_perc: float = 0.6,
+        img_center_crop_perc: float = CENTER_CROP_PERC,
         device: Union[str, torch.device] = "cpu",
     ):
         "takes a path to either a single png image or a folder of pngs"
-        center_crop_h = int(IMG_H * center_crop_perc)
-        center_crop_w = int(IMG_W * center_crop_perc)
+        center_crop_h = int(IMG_H * img_center_crop_perc)
+        center_crop_w = int(IMG_W * img_center_crop_perc)
         transforms = CenterCrop((center_crop_h, center_crop_w))
 
         datapath = Path(path_to_data)
@@ -99,7 +100,7 @@ class ImageLoader:
     def load_zarr_data(
         cls,
         path_to_zarr: Union[str, Path],
-        center_crop_perc: float = 0.6,
+        center_crop_perc: float = CENTER_CROP_PERC,
         device: Union[str, torch.device] = "cpu",
     ):
         data = zarr.open(path_to_zarr, mode="r")

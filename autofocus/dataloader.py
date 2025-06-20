@@ -20,6 +20,8 @@ from torchvision.transforms import (
 )
 from torchvision.io import read_image as read_image_torch, ImageReadMode
 
+from autofocus.constants import CENTER_CROP_PERC
+
 
 IMG_H, IMG_W = 772, 1032
 
@@ -189,7 +191,7 @@ def read_grayscale(img_path):
 def get_datasets(
     dataset_description_file: str,
     batch_size: int,
-    img_center_crop_perc: float = 0.6,
+    img_center_crop_perc: float = CENTER_CROP_PERC,
     split_fractions_override: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Dataset]:
     dd = load_dataset_description(dataset_description_file)
@@ -298,7 +300,7 @@ def collate_batch(batch, transforms: Optional[nn.Module] = None):
 def get_dataloader(
     dataset_description_file: str,
     batch_size: int,
-    img_center_crop_perc: float = 0.6,
+    img_center_crop_perc: float = CENTER_CROP_PERC,
     device: Union[str, torch.device] = "cpu",
     split_fractions_override: Optional[Dict[str, float]] = None,
     num_workers: Optional[int] = None,

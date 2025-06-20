@@ -5,14 +5,13 @@ from typing import Union
 from pathlib import Path
 
 from autofocus.dataloader import IMG_H, IMG_W
+from autofocus.constants import CENTER_CROP_PERC
 
 
 class AutoFocus(nn.Module):
     def __init__(self):
         super().__init__()
-        self.center_crop_perc = (
-            0.6  # Percentage of the image height/width to crop from the center
-        )
+        self.center_crop_perc = CENTER_CROP_PERC  # Percentage of the image height/width to crop from the center
         self.img_size = (
             int(self.center_crop_perc * IMG_H),
             int(self.center_crop_perc * IMG_W),
