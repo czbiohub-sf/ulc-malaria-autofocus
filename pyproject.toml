@@ -10,7 +10,7 @@ authors = [
 ]
 description = "autofocus model for the ULC Malaria Scope"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 keywords = ["PyTorch", "Deep Learning", "Autofocus"]
 license = {text = "BSD-3-Clause"}
 classifiers = [
@@ -22,6 +22,7 @@ dependencies = [
     "AllanTools",
     "onnx == 1.16.1",
     "openvino-dev == 2023.0.2",
+    "zarr>=2.16.1",
 ]
 
 [tool.setuptools]
