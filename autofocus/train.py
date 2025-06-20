@@ -6,7 +6,6 @@ import torch
 
 from torch import nn
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from autofocus.model import AutoFocus
 from autofocus.argparsers import train_parser
@@ -76,10 +75,7 @@ def train(dev):
         test_dataloader,
     ) = init_dataloaders(config)
 
-    anneal_period = config["epochs"] * len(train_dataloader)
-    scheduler = CosineAnnealingLR(
-        optimizer, T_max=anneal_period, eta_min=config["learning_rate"] / 3
-    )
+    lr = config["learning_rate"]
 
     best_val_loss = 1e10
     global_step = 0
@@ -96,13 +92,12 @@ def train(dev):
             loss = L2(outputs, labels)
             loss.backward()
             optimizer.step()
-            scheduler.step()
 
             wandb.log(
                 {
                     "train_loss": loss.item(),
                     "epoch": epoch,
-                    "LR": scheduler.get_last_lr()[0],
+                    "LR": lr,
                 },
                 commit=False,
                 step=global_step,
