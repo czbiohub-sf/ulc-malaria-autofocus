@@ -174,7 +174,7 @@ def predict(
     elif path_to_images and overlay:
         output.mkdir(parents=True, exist_ok=True)
         image_loader = ImageLoader.load_image_data(
-            path_to_images, img_size=model.img_size, device=device
+            path_to_images, img_center_crop_perc=model.center_crop_perc, device=device
         )
         for i, (img_path, img) in enumerate(
             zip(sorted(Path(path_to_images).glob("*.png")), image_loader)
@@ -243,7 +243,9 @@ def predict_training_data(
                 path_to_images = subfolder
 
                 image_loader = ImageLoader.load_image_data(
-                    path_to_images, img_size=model.img_size, device=device
+                    path_to_images,
+                    img_center_crop_perc=model.center_crop_perc,
+                    device=device,
                 )
 
                 # Infer
